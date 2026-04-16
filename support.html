@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support — Salary Tracker</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 0 auto; padding: 40px 20px; color: #1a1a2e; line-height: 1.6; }
+  h1 { color: #1a2f5e; border-bottom: 3px solid #1a2f5e; padding-bottom: 10px; }
+  h2 { color: #1a2f5e; margin-top: 32px; }
+  .lang-switch { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .lang-switch a { padding: 6px 14px; background: #f0f2f7; border-radius: 20px; text-decoration: none; color: #1a2f5e; font-size: 14px; font-weight: 600; }
+  .lang-switch a.active { background: #1a2f5e; color: #fff; }
+  .qa { background: #fff; border-left: 4px solid #4a7fc8; padding: 16px 20px; margin-bottom: 16px; border-radius: 0 8px 8px 0; box-shadow: 0 1px 4px rgba(26,47,94,0.05); }
+  .qa strong { color: #1a2f5e; }
+  .contact { background: #f0f4ff; padding: 20px; border-radius: 12px; margin-top: 32px; text-align: center; }
+  a { color: #1a2f5e; }
+  .section { display: none; }
+  .section.active { display: block; }
+  body { background: #f7f8fc; }
+</style>
+</head>
+<body>
+
+<div class="lang-switch">
+  <a href="#en" onclick="show('en', this)" class="active">English</a>
+  <a href="#vi" onclick="show('vi', this)">Tiếng Việt</a>
+  <a href="#ja" onclick="show('ja', this)">日本語</a>
+</div>
+
+<!-- ===================== ENGLISH ===================== -->
+<div class="section active" id="en">
+  <h1>Support — Salary Tracker</h1>
+
+  <p>Thanks for using Salary Tracker. We are a small independent developer and read every message.</p>
+
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="qa">
+    <p><strong>Q: Where is my data stored?</strong></p>
+    <p>All data is stored on your device only, in the app's local storage. Nothing is sent to a server, ever.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: How do I back up my data?</strong></p>
+    <p>Settings → Export → CSV or PDF. The file is saved to your device. We recommend exporting monthly.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: I deleted the app — can I recover my data?</strong></p>
+    <p>No. Because nothing is sent to us, there is no cloud copy. Always export before uninstalling.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: Can I use the app on multiple devices?</strong></p>
+    <p>Each install is independent. To move data: export CSV on the old device, manually re-enter on the new device.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: How do I switch language or currency?</strong></p>
+    <p>Settings → Language / Currency. Change at any time without losing data.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: How is overtime calculated?</strong></p>
+    <p>For hourly jobs: hours above the OT threshold are paid at (rate × OT multiplier). Configure per job in Settings → Edit Job.</p>
+  </div>
+
+  <div class="contact">
+    <p><strong>Need more help?</strong></p>
+    <p>Email: <a href="mailto:phamsunghai@gmail.com">phamsunghai@gmail.com</a></p>
+    <p>We reply within 2 business days.</p>
+  </div>
+</div>
+
+<!-- ===================== TIẾNG VIỆT ===================== -->
+<div class="section" id="vi">
+  <h1>Hỗ trợ — Salary Tracker</h1>
+
+  <p>Cảm ơn bạn đã dùng Salary Tracker. Chúng tôi là nhà phát triển độc lập nhỏ và đọc mọi tin nhắn.</p>
+
+  <h2>Câu hỏi thường gặp</h2>
+
+  <div class="qa">
+    <p><strong>H: Dữ liệu của tôi được lưu ở đâu?</strong></p>
+    <p>Tất cả dữ liệu chỉ lưu trên thiết bị của bạn, trong local storage của app. Không gửi đi đâu cả.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>H: Làm sao sao lưu dữ liệu?</strong></p>
+    <p>Cài đặt → Xuất → CSV hoặc PDF. File được lưu vào thiết bị. Khuyên xuất hàng tháng.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>H: Tôi đã gỡ app — có khôi phục được dữ liệu không?</strong></p>
+    <p>Không. Vì không có gì gửi lên cloud, không có bản sao. Luôn xuất dữ liệu trước khi gỡ.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>H: Có thể dùng trên nhiều thiết bị không?</strong></p>
+    <p>Mỗi máy độc lập. Chuyển dữ liệu: xuất CSV ở máy cũ, nhập lại thủ công ở máy mới.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>H: Đổi ngôn ngữ / tiền tệ thế nào?</strong></p>
+    <p>Cài đặt → Ngôn ngữ / Tiền tệ. Đổi bất cứ lúc nào, không mất dữ liệu.</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>H: OT (tăng ca) tính ra sao?</strong></p>
+    <p>Với việc theo giờ: số giờ vượt ngưỡng OT × hệ số OT. Cấu hình trong Cài đặt → Sửa công việc.</p>
+  </div>
+
+  <div class="contact">
+    <p><strong>Cần hỗ trợ thêm?</strong></p>
+    <p>Email: <a href="mailto:phamsunghai@gmail.com">phamsunghai@gmail.com</a></p>
+    <p>Chúng tôi trả lời trong 2 ngày làm việc.</p>
+  </div>
+</div>
+
+<!-- ===================== 日本語 ===================== -->
+<div class="section" id="ja">
+  <h1>サポート — Salary Tracker</h1>
+
+  <p>Salary Tracker をご利用いただきありがとうございます。小さな個人開発者で、すべてのメッセージに目を通しています。</p>
+
+  <h2>よくある質問</h2>
+
+  <div class="qa">
+    <p><strong>Q: データはどこに保存されますか？</strong></p>
+    <p>すべてのデータはお使いの端末内（ローカルストレージ）にのみ保存されます。サーバーには一切送信されません。</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: バックアップ方法は？</strong></p>
+    <p>設定 → エクスポート → CSV または PDF。ファイルが端末に保存されます。月一回のエクスポートをおすすめします。</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: アプリを削除しました — データは復元できますか？</strong></p>
+    <p>いいえ。クラウドにコピーが無いため復元できません。アンインストール前に必ずエクスポートしてください。</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: 複数の端末で使えますか？</strong></p>
+    <p>各端末は独立しています。データ移行：旧端末で CSV を出力し、新端末で手動入力してください。</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: 言語・通貨の切替方法は？</strong></p>
+    <p>設定 → 言語 / 通貨。データを失わずにいつでも変更可能です。</p>
+  </div>
+
+  <div class="qa">
+    <p><strong>Q: 残業の計算方法は？</strong></p>
+    <p>時給制の場合：残業開始時間を超えた時間 × 残業係数。設定 → 勤務先編集 で個別に設定できます。</p>
+  </div>
+
+  <div class="contact">
+    <p><strong>その他のお問い合わせ</strong></p>
+    <p>メール: <a href="mailto:phamsunghai@gmail.com">phamsunghai@gmail.com</a></p>
+    <p>2営業日以内に返信いたします。</p>
+  </div>
+</div>
+
+<script>
+  function show(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.lang-switch a').forEach(a => a.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+  }
+  if (location.hash) {
+    const id = location.hash.slice(1);
+    const link = document.querySelector(`.lang-switch a[href="#${id}"]`);
+    if (link) show(id, link);
+  }
+</script>
+
+</body>
+</html>
