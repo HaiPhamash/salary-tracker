@@ -68,6 +68,8 @@ function applyLang() {
   set('sgJobs', t.sgJobs); set('btnAddJob', t.btnAddJob);
   set('sgApp', t.sgApp); set('sLang', t.sLang); set('sLangV', t.sLangV);
   set('sCur', t.sCur); set('sCurV', getCurLabel());
+  set('sGuide', t.sGuide || 'How to use');
+  set('sGuideV', t.sGuideV || 'Open step-by-step guide');
   set('sPrivacy', t.sPrivacy || 'Privacy Policy');
   set('sPrivacyV', t.sPrivacyV || 'Open website');
   set('sSupport', t.sSupport || 'Support');
@@ -125,6 +127,12 @@ function openSupportPage() {
 let _daySheetDate = null;
 
 function openDaySheet(date) {
+  if (!jobs.length) {
+    toast((L[curLang] && L[curLang].needJobFirst) || 'Create your first workplace before adding shifts.');
+    goPage('settings');
+    openGuideModal();
+    return;
+  }
   _daySheetDate = date || calSelectedDate || localYmd();
   calSelectedDate = _daySheetDate;
   const t = L[curLang];
@@ -225,6 +233,13 @@ function deleteTemplate(id) {
 }
 
 function openShiftForm() {
+  if (!jobs.length) {
+    closeDaySheet();
+    toast((L[curLang] && L[curLang].needJobFirst) || 'Create your first workplace before adding shifts.');
+    goPage('settings');
+    openAddJob();
+    return;
+  }
   closeDaySheet();
   editShiftId = null;
   const t = L[curLang];
@@ -337,7 +352,10 @@ function setCurrency(id) {
   set('sCurV', getCurLabel());
   closeCurModal();
   save();
+  renderHomeStats();
   renderShifts();
+  renderCalendar();
+  if (curPage === 'settings') renderJobCards();
   if (curPage === 'report') renderReport(curPeriod);
 }
 
@@ -625,6 +643,8 @@ function saveJob() {
   save();
   renderJobCards();
   fillJobSel();
+  renderCalendar();
+  renderHomeStats();
 }
 
 function delJob(id) {

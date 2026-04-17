@@ -131,6 +131,11 @@
           <div class="settings-info"><div class="settings-name" id="sCur">Đơn vị tiền tệ</div><div class="settings-value" id="sCurV">JPY (¥)</div></div>
           <div class="settings-arrow">›</div>
         </div>
+        <div class="settings-row" onclick="openGuideModal()">
+          <div class="settings-icon">📘</div>
+          <div class="settings-info"><div class="settings-name" id="sGuide">Hướng dẫn sử dụng</div><div class="settings-value" id="sGuideV">Xem từng bước</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
         <div class="settings-row" onclick="openPrivacyPolicy()">
           <div class="settings-icon">🔒</div>
           <div class="settings-info"><div class="settings-name" id="sPrivacy">Chính sách bảo mật</div><div class="settings-value" id="sPrivacyV">Mở trang web</div></div>
@@ -306,6 +311,15 @@
     </div>
   </div>
 
+  <!-- Guide -->
+  <div class="modal" id="moGuide" onclick="if(event.target===this)closeGuideModal()">
+    <div class="modal-sheet guide-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="guideMT">Hướng dẫn sử dụng</div>
+      <div id="guideContent"></div>
+    </div>
+  </div>
+
   <!-- Profiles -->
   <div class="modal" id="moProfiles" onclick="if(event.target===this)closeProfilesModal()">
     <div class="modal-sheet">
@@ -336,7 +350,7 @@
 
       <div class="form-group">
         <label id="lbl_jn">Tên công việc / Nơi làm</label>
-        <input type="text" id="inp_jn" placeholder="VD: Nhà hàng Sakura...">
+        <input type="text" id="inp_jn" placeholder="VD: Nơi làm của tôi...">
       </div>
 
       <div class="section-divider" id="sdivType">LOẠI HÌNH LƯƠNG</div>
@@ -458,6 +472,7 @@
   <script src="js/calc.js"></script>
   <script src="js/pages.js"></script>
   <script src="js/modals.js"></script>
+  <script src="js/guide.js"></script>
   <script src="js/onboarding.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -79,6 +79,25 @@ function monthShift(cursor, delta) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
 
+function getCalendarActionDate() {
+  if (calSelectedDate && calSelectedDate.startsWith(calCursor)) return calSelectedDate;
+  return calCursor + '-01';
+}
+
+function getNoJobsStateHtml(context) {
+  const t = L[curLang];
+  const body = t.noJobsBody || 'Create your first workplace before adding shifts.';
+  return `<div class="empty-setup-card${context ? ' empty-setup-card--' + context : ''}">
+    <div class="empty-setup-icon">🧭</div>
+    <div class="empty-setup-title">${t.noJobsTitle || 'Create your first workplace'}</div>
+    <div class="empty-setup-body">${body}</div>
+    <div class="empty-setup-actions">
+      <button class="btn btn--accent btn--small" onclick="goPage('settings');openAddJob()">${t.noJobsAction || 'Add first job'}</button>
+      <button class="btn btn--small empty-setup-secondary" onclick="openGuideModal()">${t.sGuide || 'How to use'}</button>
+    </div>
+  </div>`;
+}
+
 function renderCalendar() {
   const root = document.getElementById('page-add');
   if (!root || !root.classList.contains('active') && curPage !== 'add') {
@@ -88,6 +107,8 @@ function renderCalendar() {
   const list = document.getElementById('calList');
   const wk   = document.getElementById('calWeekdays');
   const lbl  = document.getElementById('calMonthLbl');
+  const gridWrap = document.querySelector('.cal-grid-wrap');
+  const dayPanel = document.getElementById('calDayPanel');
   if (!grid || !wk || !lbl) return;
 
   const t = L[curLang];
@@ -109,18 +130,32 @@ function renderCalendar() {
     b.classList.toggle('active', b.dataset.view === calViewMode);
   });
 
-  if (calViewMode === 'list') {
+  if (!jobs.length) {
+    wk.style.display = 'none';
+    if (gridWrap) gridWrap.style.display = 'none';
     grid.style.display = 'none';
-    document.querySelector('.cal-grid-wrap').style.display = 'none';
     list.style.display = 'block';
+    list.innerHTML = getNoJobsStateHtml('calendar');
+    if (dayPanel) dayPanel.style.display = 'none';
+    return;
+  }
+
+  if (calViewMode === 'list') {
+    wk.style.display = 'none';
+    grid.style.display = 'none';
+    if (gridWrap) gridWrap.style.display = 'none';
+    list.style.display = 'block';
+    if (dayPanel) dayPanel.style.display = 'none';
     renderCalList();
   } else {
+    wk.style.display = 'grid';
     grid.style.display = '';
-    document.querySelector('.cal-grid-wrap').style.display = '';
+    if (gridWrap) gridWrap.style.display = '';
     list.style.display = 'none';
+    if (dayPanel) dayPanel.style.display = '';
     renderCalGrid();
+    renderCalDayPanel();
   }
-  renderCalDayPanel();
 }
 
 function renderCalGrid() {
@@ -162,27 +197,59 @@ function renderCalList() {
   if (!list) return;
   const [y, m] = calCursor.split('-').map(Number);
   const prefix = y + '-' + String(m).padStart(2, '0');
-  const rows = shifts.filter(s => s.date.startsWith(prefix)).sort((a, b) => b.date.localeCompare(a.date));
-  if (!rows.length) {
-    list.innerHTML = `<div class="cal-list-empty">${L[curLang].cal_noShift || 'No shifts'}</div>`;
-    return;
-  }
   const t = L[curLang];
-  list.innerHTML = rows.map(s => {
-    const j = getShiftJobMeta(s);
-    const dt = new Date(s.date + 'T12:00:00');
-    const timeTxt = s.start
-      ? `${s.start}–${s.end} · ${s.hours}h`
-      : (t['type_' + j.type] || '');
-    return `<div class="cal-list-item" onclick="openEditShift(${s.id})">
-      <div class="cal-list-day"><div class="dd">${dt.getDate()}</div><div class="dw">${t.days[dt.getDay()]}</div></div>
-      <div class="cal-list-main">
-        <div class="t">${j.icon} ${j.name}</div>
-        <div class="s">${timeTxt}</div>
+  const totalDays = new Date(y, m, 0).getDate();
+  let html = '';
+
+  for (let day = 1; day <= totalDays; day++) {
+    const date = prefix + '-' + String(day).padStart(2, '0');
+    const dt = new Date(date + 'T12:00:00');
+    const dayRows = shifts
+      .filter(s => s.date === date)
+      .sort((a, b) => (a.start || '').localeCompare(b.start || '') || a.id - b.id);
+    const isSelected = date === calSelectedDate;
+    const dow = dt.getDay();
+    const dayClass = [
+      'cal-list-date',
+      isSelected ? 'selected' : '',
+      dow === 0 ? 'sun' : '',
+      dow === 6 ? 'sat' : '',
+      dayRows.length ? 'has-shifts' : ''
+    ].filter(Boolean).join(' ');
+
+    const shiftHtml = dayRows.length
+      ? dayRows.map(s => {
+          const j = getShiftJobMeta(s);
+          const timeText = s.start ? `${s.start}<span>${s.end}</span>` : `<strong>${t['type_' + j.type] || ''}</strong>`;
+          const metaText = s.start
+            ? `${s.hours}h${s.note ? ' · ' + s.note : ''}`
+            : `${t['type_' + j.type] || ''}${s.note ? ' · ' + s.note : ''}`;
+          return `<button class="cal-timeline-shift" onclick="event.stopPropagation();openEditShift(${s.id})">
+            <div class="cal-timeline-time">${timeText}</div>
+            <div class="cal-timeline-bar" style="background:${j.color};"></div>
+            <div class="cal-timeline-main">
+              <div class="cal-timeline-job">${j.icon} ${j.name}</div>
+              <div class="cal-timeline-meta">${metaText}</div>
+            </div>
+            <div class="cal-timeline-pay">${fmt(getShiftPay(s))}</div>
+          </button>`;
+        }).join('')
+      : `<button class="cal-list-empty-day" onclick="event.stopPropagation();openDaySheet('${date}')">＋ ${t.cal_newShift || 'Add shift'}</button>`;
+
+    html += `<div class="cal-list-group${isSelected ? ' selected' : ''}">
+      <button class="${dayClass}" onclick="selectCalListDate('${date}', true)">
+        <div class="dd">${dt.getDate()}</div>
+        <div class="dw">${t.days[dow]}</div>
+        <div class="dot"></div>
+      </button>
+      <div class="cal-list-track">
+        ${shiftHtml}
       </div>
-      <div class="cal-list-pay">${fmt(getShiftPay(s))}</div>
     </div>`;
-  }).join('');
+  }
+
+  html += `<button class="cal-list-add-btn" onclick="openDaySheet('${getCalendarActionDate()}')">＋ ${t.cal_newShift || 'Add shift'}</button>`;
+  list.innerHTML = html;
 }
 
 function renderCalDayPanel() {
@@ -190,6 +257,11 @@ function renderCalDayPanel() {
   const panel   = document.getElementById('calPanelShifts');
   if (!dateLbl || !panel) return;
   const t = L[curLang];
+  if (!jobs.length) {
+    dateLbl.textContent = '';
+    panel.innerHTML = '';
+    return;
+  }
   if (!calSelectedDate) { dateLbl.textContent = ''; panel.innerHTML = ''; return; }
 
   const dt = new Date(calSelectedDate + 'T12:00:00');
@@ -238,6 +310,12 @@ function onCalCellTap(date) {
     renderCalDayPanel();
   }
   openDaySheet(date);
+}
+
+function selectCalListDate(date, openSheet) {
+  calSelectedDate = date;
+  renderCalendar();
+  if (openSheet) openDaySheet(date);
 }
 
 function setCalView(mode) {
@@ -309,30 +387,33 @@ function attachSwipeHandlers(container) {
 }
 
 function attachCalendarSwipe() {
-  const wrap = document.querySelector('.cal-grid-wrap');
-  if (!wrap || wrap._swipeBound) return;
-  wrap._swipeBound = true;
+  const surface = document.getElementById('page-add');
+  if (!surface || surface._swipeBound) return;
+  surface._swipeBound = true;
   let x0 = 0, y0 = 0, dx = 0, dy = 0, active = false, swiped = false;
-  wrap.addEventListener('touchstart', (e) => {
+  let ignore = false;
+  surface.addEventListener('touchstart', (e) => {
+    ignore = !!(e.target.closest && e.target.closest('input,select,textarea,a,label,.swipe-row,.cal-view-btn'));
+    if (ignore) return;
     const t = e.touches[0];
     x0 = t.clientX; y0 = t.clientY; dx = dy = 0; active = true; swiped = false;
   }, { passive: true });
-  wrap.addEventListener('touchmove', (e) => {
-    if (!active) return;
+  surface.addEventListener('touchmove', (e) => {
+    if (!active || ignore) return;
     const t = e.touches[0];
     dx = t.clientX - x0;
     dy = t.clientY - y0;
   }, { passive: true });
-  wrap.addEventListener('touchend', () => {
-    if (!active) return;
+  surface.addEventListener('touchend', () => {
+    if (!active || ignore) { active = false; return; }
     active = false;
     const absX = Math.abs(dx), absY = Math.abs(dy);
-    if (absY > 50 && absY > absX * 1.3) {
+    if (absX > 60 && absX > absY * 1.25) {
       swiped = true;
-      shiftCalMonth(dy < 0 ? +1 : -1);
+      shiftCalMonth(dx < 0 ? +1 : -1);
     }
   });
-  wrap.addEventListener('click', (e) => {
+  surface.addEventListener('click', (e) => {
     if (swiped) { e.stopPropagation(); e.preventDefault(); swiped = false; }
   }, true);
 }
@@ -342,6 +423,10 @@ function attachCalendarSwipe() {
 function fillJobSel() {
   const sel = document.getElementById('inp_job');
   if (!sel) return;
+  if (!jobs.length) {
+    sel.innerHTML = `<option value="">${(L[curLang] && L[curLang].noJobsTitle) || 'Create your first workplace'}</option>`;
+    return;
+  }
   sel.innerHTML = jobs.map(j =>
     `<option value="${j.id}">${j.icon} ${j.name} — ${L[curLang]['type_' + j.type]}</option>`
   ).join('');
@@ -382,8 +467,10 @@ function onShiftDateChange() {
 function toggleOT() {
   otIsOn = !otIsOn;
   document.getElementById('togOT').className = 'toggle-switch' + (otIsOn ? ' on' : '');
-  const jobId = parseInt(document.getElementById('inp_job').value) || jobs[0].id;
-  const job   = getJob(jobId);
+  const fallbackJob = getFirstJob();
+  const jobId = parseInt(document.getElementById('inp_job').value) || (fallbackJob ? fallbackJob.id : 0);
+  const job   = getJob(jobId) || fallbackJob;
+  if (!job) return;
   document.getElementById('monthly_ot_manual').style.display =
     (job.type === 'monthly' && job.otType === 'manual' && otIsOn) ? 'block' : 'none';
   calcPrev();
@@ -448,7 +535,13 @@ function addShift() {
   const fallbackJob = getFirstJob();
   const jobId = parseInt(document.getElementById('inp_job').value) || (fallbackJob ? fallbackJob.id : 0);
   const job   = getJob(jobId) || fallbackJob;
-  if (!job) return;
+  if (!job) {
+    toast((L[curLang] && L[curLang].needJobFirst) || 'Create your first workplace before adding shifts.');
+    closeShiftForm();
+    goPage('settings');
+    openAddJob();
+    return;
+  }
   const isHourly = job.type === 'hourly';
   const date = (isHourly
     ? document.getElementById('inp_date').value
@@ -662,6 +755,10 @@ function renderJobCards() {
   const t  = L[curLang];
   const el = document.getElementById('jobCardList');
   if (!el) return;
+  if (!jobs.length) {
+    el.innerHTML = getNoJobsStateHtml('settings');
+    return;
+  }
 
   const sym = getCurSym();
   el.innerHTML = jobs.map(j => {
