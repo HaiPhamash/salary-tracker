@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a2f5e">
+  <title>Salary Tracker</title>
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a2f5e'/><text y='.9em' font-size='72' x='50%25' dominant-baseline='middle' text-anchor='middle'>💴</text></svg>">
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       Header
+       ========================================================================= -->
+  <header class="app-header">
+    <div>
+      <h1 id="appName">💴 Salary Tracker</h1>
+      <div class="sub" id="appSub">Quản lý thu nhập</div>
+    </div>
+    <button class="lang-btn" onclick="openLang()" id="lbtn">🌐 🇻🇳</button>
+  </header>
+
+  <!-- =========================================================================
+       Main — scrollable pages
+       ========================================================================= -->
+  <main class="app-main">
+
+    <!-- Home -->
+    <section class="page active" id="page-home">
+      <div style="color:var(--text-muted);font-size:13px;margin-bottom:2px;" id="greetT">Xin chào!</div>
+      <strong style="color:var(--text);font-size:16px;" id="greetName">👋</strong>
+
+      <div class="balance-card">
+        <div class="balance-label"  id="todayLbl">Thu nhập hôm nay</div>
+        <div class="balance-amount" id="todayAmt">¥23,763</div>
+        <div class="balance-sub"    id="todaySub">2 ca • 1 ngày lễ OT</div>
+        <div class="balance-row">
+          <div class="balance-mini"><div class="label" id="wkLbl">Tuần này</div><div class="value" id="wkAmt">¥82,000</div></div>
+          <div class="balance-mini"><div class="label" id="moLbl">Tháng này</div><div class="value" id="moAmt">¥310,500</div></div>
+          <div class="balance-mini"><div class="label" id="yrLbl">Năm nay</div><div class="value" id="yrAmt">¥2.6M</div></div>
+        </div>
+      </div>
+
+      <div class="section-title" id="statTit">THỐNG KÊ</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="hrsV">148h</div><div class="stat-label" id="hrsL">Giờ làm tháng này</div></div>
+        <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value" id="otV">22h OT</div><div class="stat-label" id="otL">Tăng ca</div></div>
+        <div class="stat-card"><div class="stat-icon">💼</div><div class="stat-value" id="jobsV">3 jobs</div><div class="stat-label" id="jobsL">Công việc</div></div>
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="goalV">97%</div><div class="stat-label" id="goalL">Mục tiêu tháng</div></div>
+      </div>
+
+      <div class="section-title" id="recTit">CA LÀM GẦN ĐÂY</div>
+      <div class="shift-list" id="shiftList"></div>
+      <div style="height:16px;"></div>
+    </section>
+
+    <!-- Add Shift (Calendar) -->
+    <section class="page" id="page-add">
+      <div class="cal-toolbar">
+        <div class="cal-view-toggle" role="tablist">
+          <button class="cal-view-btn active" data-view="grid" onclick="setCalView('grid')" aria-label="Grid">▦</button>
+          <button class="cal-view-btn"        data-view="list" onclick="setCalView('list')" aria-label="List">☰</button>
+        </div>
+        <div class="cal-month-label" id="calMonthLbl" onclick="goCalToday()">—</div>
+        <div class="cal-toolbar-spacer"></div>
+      </div>
+
+      <div class="cal-weekdays" id="calWeekdays"></div>
+      <div class="cal-grid-wrap">
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="cal-list" id="calList" style="display:none;"></div>
+
+      <div class="cal-day-panel" id="calDayPanel">
+        <div class="cal-day-panel-date" id="calPanelDate"></div>
+        <div id="calPanelShifts"></div>
+      </div>
+      <div style="height:12px;"></div>
+    </section>
+
+    <!-- Report -->
+    <section class="page" id="page-report">
+      <div class="period-tabs">
+        <div class="period-tab active" onclick="setPeriod('week',this)"    id="tabW">Tuần</div>
+        <div class="period-tab"        onclick="setPeriod('month',this)"   id="tabM">Tháng</div>
+        <div class="period-tab"        onclick="setPeriod('quarter',this)" id="tabQ">Quý</div>
+        <div class="period-tab"        onclick="setPeriod('year',this)"    id="tabY">Năm</div>
+      </div>
+
+      <div class="job-chips" id="jfilter"></div>
+
+      <div class="report-summary">
+        <div class="label" id="rPeriodLbl">Tổng tuần này</div>
+        <div class="value" id="rMainVal">¥0</div>
+        <div class="sub"   id="rSub">0 ca</div>
+      </div>
+
+      <div class="chart-box">
+        <h3 id="chartTit">Thu nhập 7 ngày</h3>
+        <div class="bar-chart" id="barChart"></div>
+      </div>
+      <div style="height:12px;"></div>
+
+      <div class="form-card" style="margin-top:0;">
+        <h3 id="detTit">Chi tiết</h3>
+        <div id="rDetails"></div>
+      </div>
+      <div style="height:20px;"></div>
+    </section>
+
+    <!-- Settings -->
+    <section class="page" id="page-settings">
+      <div class="section-title" id="sgJobs">QUẢN LÝ CÔNG VIỆC</div>
+      <div id="jobCardList"></div>
+      <button class="btn btn--accent" onclick="openAddJob()" id="btnAddJob" style="margin-bottom:16px;">➕ Thêm công việc mới</button>
+
+      <div class="settings-group">
+        <div class="settings-group-title" id="sgApp">ỨNG DỤNG</div>
+        <div class="settings-row" onclick="openLang()">
+          <div class="settings-icon">🌐</div>
+          <div class="settings-info"><div class="settings-name" id="sLang">Ngôn ngữ</div><div class="settings-value" id="sLangV">Tiếng Việt</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openCurModal()">
+          <div class="settings-icon">💱</div>
+          <div class="settings-info"><div class="settings-name" id="sCur">Đơn vị tiền tệ</div><div class="settings-value" id="sCurV">JPY (¥)</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openPrivacyPolicy()">
+          <div class="settings-icon">🔒</div>
+          <div class="settings-info"><div class="settings-name" id="sPrivacy">Chính sách bảo mật</div><div class="settings-value" id="sPrivacyV">Mở trang web</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openSupportPage()">
+          <div class="settings-icon">🛟</div>
+          <div class="settings-info"><div class="settings-name" id="sSupport">Hỗ trợ</div><div class="settings-value" id="sSupportV">Câu hỏi thường gặp</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-icon">🔔</div>
+          <div class="settings-info"><div class="settings-name" id="sNotif">Thông báo</div><div class="settings-value" id="sNotifV">Bật</div></div>
+          <div class="toggle" onclick="this.classList.toggle('off')"></div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title" id="sgData">DỮ LIỆU</div>
+        <div class="settings-row" onclick="openExpModal()">
+          <div class="settings-icon">📤</div>
+          <div class="settings-info"><div class="settings-name" id="sExp">Xuất dữ liệu</div><div class="settings-value">CSV / PDF</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openProfilesModal()">
+          <div class="settings-icon">👥</div>
+          <div class="settings-info"><div class="settings-name" id="sProfile">Người dùng</div><div class="settings-value" id="sProfileV">—</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="clearData()">
+          <div class="settings-icon">🗑️</div>
+          <div class="settings-info"><div class="settings-name" id="sClear">Xoá dữ liệu</div><div class="settings-value" id="sClearV">Xoá toàn bộ lịch sử</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openDelProfileModal()">
+          <div class="settings-icon">❌</div>
+          <div class="settings-info"><div class="settings-name" id="sDelUser">Xoá người dùng</div><div class="settings-value" id="sDelUserV">Xoá hồ sơ và dữ liệu</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       Bottom nav
+       ========================================================================= -->
+  <nav class="app-nav">
+    <div class="nav-item active" onclick="goPage('home',this)"     id="nav-home"><div class="nav-icon">🏠</div><div class="nav-label" id="navH">Trang chủ</div></div>
+    <div class="nav-item"        onclick="goPage('add',this)"      id="nav-add"><div class="nav-fab">➕</div><div class="nav-label" id="navA">Thêm ca</div></div>
+    <div class="nav-item"        onclick="goPage('report',this)"   id="nav-report"><div class="nav-icon">📊</div><div class="nav-label" id="navR">Báo cáo</div></div>
+    <div class="nav-item"        onclick="goPage('settings',this)" id="nav-settings"><div class="nav-icon">⚙️</div><div class="nav-label" id="navS">Cài đặt</div></div>
+  </nav>
+
+  <!-- =========================================================================
+       Modals
+       ========================================================================= -->
+
+  <!-- Day sheet (pick: template / new shift) -->
+  <div class="modal" id="moDay" onclick="if(event.target===this)closeDaySheet()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="daySheetTit">Thêm ca</div>
+      <div class="day-sheet-hist-lbl" id="daySheetHistLbl" style="display:none;">Thêm từ lịch sử</div>
+      <div id="daySheetTemplates"></div>
+      <button class="btn" onclick="openShiftForm()" id="btnDayNewShift" style="margin-top:14px;">Nhập ca mới</button>
+      <div style="height:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Shift form (new / edit) -->
+  <div class="modal" id="moShift" onclick="if(event.target===this)closeShiftForm()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="shiftMT">➕ Thêm ca làm việc</div>
+
+      <div class="form-group">
+        <label id="lbl_job">Công việc</label>
+        <select id="inp_job" onchange="onJobChange()"></select>
+      </div>
+
+      <div id="hourly_fields">
+        <div class="dt-group">
+          <div class="dt-row">
+            <span class="dt-label" id="lbl_start">Bắt đầu</span>
+            <div class="dt-pill"><span class="dt-display" id="disp_date"></span><input type="date" id="inp_date" class="dt-input" oninput="onShiftDateChange()"></div>
+            <div class="dt-pill dt-pill-time"><input type="time" id="inp_start" value="09:00" oninput="calcPrev()"></div>
+          </div>
+          <div class="dt-row">
+            <span class="dt-label" id="lbl_end">Kết thúc</span>
+            <div class="dt-pill"><span class="dt-display" id="disp_date_end"></span><input type="date" id="inp_date_end" class="dt-input" oninput="syncDateDisplay('inp_date_end','disp_date_end');calcPrev()"></div>
+            <div class="dt-pill dt-pill-time"><input type="time" id="inp_end" value="18:00" oninput="calcPrev()"></div>
+          </div>
+          <div class="dt-row">
+            <span class="dt-label" id="lbl_brk">Nghỉ</span>
+            <div class="dt-pill dt-pill-break"><input type="number" id="inp_brk" value="60" min="0" max="240" oninput="calcPrev()" placeholder="—"><span class="dt-suffix" id="brkSuf">phút</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="daily_date_fields" style="display:none;">
+        <div class="dt-group">
+          <div class="dt-row">
+            <span class="dt-label" id="lbl_date_daily">Ngày</span>
+            <div class="dt-pill"><span class="dt-display" id="disp_date_daily"></span><input type="date" id="inp_date_daily" class="dt-input" oninput="syncDateDisplay('inp_date_daily','disp_date_daily')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="dm_ot_box" class="ot-box" style="display:none;">
+        <div class="ot-box-title" id="otBoxTit">🔥 Ngày đặc biệt (OT)</div>
+        <div class="ot-toggle-row">
+          <span class="ot-toggle-lbl" id="otToggleLbl">Ngày lễ / Thứ 7 / CN</span>
+          <div class="toggle-switch" id="togOT" onclick="toggleOT()"></div>
+        </div>
+        <div id="monthly_ot_manual" style="display:none;">
+          <div class="form-group" style="margin-bottom:0;margin-top:10px;">
+            <label id="lbl_otamt">Tiền OT thêm (JPY)</label>
+            <input type="number" id="inp_otamt" value="0" min="0" oninput="calcPrev()">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="lbl_note">Ghi chú</label>
+        <input type="text" id="inp_note" placeholder="VD: Ca sáng, ngày lễ...">
+      </div>
+
+      <div class="calc-preview">
+        <div class="calc-label"     id="calcLbl">Dự tính nhận được</div>
+        <div class="calc-value"     id="calcVal">¥0</div>
+        <div class="calc-breakdown" id="calcBkd"></div>
+      </div>
+
+      <button class="btn" onclick="addShift()" id="btnSave" style="margin-top:14px;">💾 Lưu ca làm việc</button>
+      <div style="height:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Language -->
+  <div class="modal" id="moLang" onclick="if(event.target===this)closeLang()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="langMT">Chọn ngôn ngữ</div>
+      <div id="langOpts"></div>
+    </div>
+  </div>
+
+  <!-- Currency -->
+  <div class="modal" id="moCur" onclick="if(event.target===this)closeCurModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="curMT">Chọn tiền tệ</div>
+      <div id="curOpts"></div>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="modal" id="moExp" onclick="if(event.target===this)closeExpModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="expMT">Xuất dữ liệu</div>
+      <div class="export-btn" onclick="exportCSV()">
+        <div class="export-icon">📊</div>
+        <div class="export-info"><strong id="expCSVTitle">Xuất CSV</strong><span id="expCSVDesc">Mở bằng Excel, Google Sheets...</span></div>
+      </div>
+      <div class="export-btn" onclick="exportPDF()">
+        <div class="export-icon">📄</div>
+        <div class="export-info"><strong id="expPDFTitle">Xuất PDF</strong><span id="expPDFDesc">In hoặc lưu PDF qua trình duyệt</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profiles -->
+  <div class="modal" id="moProfiles" onclick="if(event.target===this)closeProfilesModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="profilesMT">Người dùng</div>
+      <div id="profilesList"></div>
+      <button class="btn btn--accent" onclick="addNewProfile()" id="btnAddProfile" style="margin-top:12px;">➕ Thêm người dùng</button>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Delete Profile -->
+  <div class="modal" id="moDelProfile" onclick="if(event.target===this)closeDelProfileModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="delProfileMT">Xoá người dùng</div>
+      <div id="delProfileList"></div>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Job -->
+  <div class="modal" id="moJob" onclick="if(event.target===this)closeJob()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="jobMT">Thêm công việc</div>
+      <input type="hidden" id="editJobId">
+
+      <div class="form-group">
+        <label id="lbl_jn">Tên công việc / Nơi làm</label>
+        <input type="text" id="inp_jn" placeholder="VD: Nhà hàng Sakura...">
+      </div>
+
+      <div class="section-divider" id="sdivType">LOẠI HÌNH LƯƠNG</div>
+      <div class="type-grid">
+        <div class="type-button active" data-type="hourly"  onclick="selType(this)"><div class="type-icon">⏱️</div><div class="type-label" id="tl_hourly">Theo giờ</div></div>
+        <div class="type-button"        data-type="daily"   onclick="selType(this)"><div class="type-icon">📅</div><div class="type-label" id="tl_daily">Theo ngày</div></div>
+        <div class="type-button"        data-type="monthly" onclick="selType(this)"><div class="type-icon">🗓️</div><div class="type-label" id="tl_monthly">Theo tháng</div></div>
+      </div>
+
+      <div class="form-group">
+        <label id="lbl_jrate">Mức lương</label>
+        <input type="number" id="inp_jrate" value="1550" min="100">
+      </div>
+      <div class="form-group" id="fg_wdays" style="display:none;">
+        <label id="lbl_wdays">Số ngày công chuẩn/tháng</label>
+        <input type="number" id="inp_wdays" value="22" min="1" max="31">
+      </div>
+
+      <div class="section-divider" id="sdivOT">CÀI ĐẶT TĂNG CA (OT)</div>
+      <div id="fg_otth_wrap">
+        <div class="form-group">
+          <label id="lbl_otth">Ngưỡng OT (giờ/ca)</label>
+          <input type="number" id="inp_otth" value="8" min="1" max="24" step="0.5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="lbl_otmul">Hệ số OT</label>
+        <input type="number" id="inp_otmul" value="1.25" min="1" max="3" step="0.05">
+      </div>
+      <div class="form-group" id="fg_ottype" style="display:none;">
+        <label id="lbl_ottype">Cách tính OT ngày lễ</label>
+        <select id="inp_ottype">
+          <option value="multiplier" id="opt_mul">Mức lương × hệ số OT</option>
+          <option value="manual"     id="opt_man">Nhập thủ công</option>
+        </select>
+      </div>
+
+      <div class="section-divider" id="sdivAlw">PHỤ CẤP</div>
+      <div id="alwList"></div>
+      <div class="allowance-input-row">
+        <input class="name-input"   type="text"   id="inp_alwn" placeholder="Tên phụ cấp">
+        <input class="amount-input" type="number" id="inp_alwa" placeholder="¥">
+        <select id="inp_alwp">
+          <option value="day"   id="opt_day">/ ngày</option>
+          <option value="month" id="opt_month">/ tháng</option>
+        </select>
+        <button class="btn btn--small" onclick="addAlw()">＋</button>
+      </div>
+
+      <div class="section-divider" id="sdivIcon">BIỂU TƯỢNG & MÀU</div>
+      <div class="icon-picker" id="iconPicker">
+        <span onclick="selIcon(this)" data-icon="🍜">🍜</span>
+        <span onclick="selIcon(this)" data-icon="🏪">🏪</span>
+        <span onclick="selIcon(this)" data-icon="🏭">🏭</span>
+        <span onclick="selIcon(this)" data-icon="🏨">🏨</span>
+        <span onclick="selIcon(this)" data-icon="🚚">🚚</span>
+        <span onclick="selIcon(this)" data-icon="💻">💻</span>
+        <span onclick="selIcon(this)" data-icon="🌸">🌸</span>
+        <span onclick="selIcon(this)" data-icon="🏗️">🏗️</span>
+        <span onclick="selIcon(this)" data-icon="🎵">🎵</span>
+        <span onclick="selIcon(this)" data-icon="🛒">🛒</span>
+        <span onclick="selIcon(this)" data-icon="🏥">🏥</span>
+        <span onclick="selIcon(this)" data-icon="🚗">🚗</span>
+      </div>
+
+      <div class="color-swatches" id="colorPicker">
+        <div class="color-swatch selected" style="background:#1a2f5e;" data-color="#1a2f5e" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#e85d04;" data-color="#e85d04" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#22c55e;" data-color="#22c55e" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#8b5cf6;" data-color="#8b5cf6" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#06b6d4;" data-color="#06b6d4" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#ec4899;" data-color="#ec4899" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#f59e0b;" data-color="#f59e0b" onclick="selColor(this)"></div>
+        <div class="color-swatch"          style="background:#64748b;" data-color="#64748b" onclick="selColor(this)"></div>
+      </div>
+
+      <button class="btn" onclick="saveJob()" id="btnSaveJob" style="margin-top:14px;">✅ Lưu công việc</button>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Onboarding splash -->
+  <div class="onboarding" id="obScreen" style="display:none;">
+    <div class="onboarding-logo">💴</div>
+    <div class="onboarding-title" id="obTitle">Salary Tracker</div>
+    <div class="onboarding-sub"   id="obSub">給与・収入管理アプリ</div>
+
+    <label class="onboarding-label" id="obLangLbl">言語 / Language</label>
+    <select class="onboarding-select" id="ob_lang" onchange="onObLangChange()">
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="vi">🇻🇳 Tiếng Việt</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="zh">🇨🇳 中文</option>
+      <option value="th">🇹🇭 ภาษาไทย</option>
+      <option value="pt">🇧🇷 Português (Brasil)</option>
+      <option value="ru">🇷🇺 Русский</option>
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="hi">🇮🇳 हिन्दी</option>
+    </select>
+
+    <label class="onboarding-label" id="obNameLbl">お名前 / Your Name</label>
+    <input class="onboarding-input" type="text" id="ob_name" placeholder="Tên của bạn...">
+
+    <button class="onboarding-btn" id="obBtn" onclick="finishOnboarding()">はじめる ▶</button>
+  </div>
+
+  <!-- Print-only report body (populated by exportPDF) -->
+  <div id="print-area"></div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- =========================================================================
+       Scripts — load order matters: i18n → state → utils → calc → features → app
+       ========================================================================= -->
+  <script src="js/i18n.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/modals.js"></script>
+  <script src="js/onboarding.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

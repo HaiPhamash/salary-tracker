@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Salary Tracker — Icon Concepts</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #f4f6fb; margin: 0; padding: 32px; }
+  h1 { text-align: center; color: #1a2f5e; margin-bottom: 8px; }
+  .sub { text-align: center; color: #666; margin-bottom: 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); text-align: center; }
+  .card h3 { margin: 16px 0 6px; color: #1a2f5e; }
+  .card p { color: #666; font-size: 13px; margin: 0; }
+  .icon-wrap { display: flex; justify-content: center; gap: 16px; align-items: center; margin-bottom: 12px; }
+  .ios-style { width: 120px; height: 120px; border-radius: 27px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .android-style { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .label { font-size: 11px; color: #999; margin-top: 4px; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<h1>Salary Tracker — Icon Concepts</h1>
+<p class="sub">Chọn 1 trong 6 concept dưới đây. Hiển thị trên cả iOS (bo góc) và Android (tròn adaptive).</p>
+
+<div class="grid">
+
+  <!-- CONCEPT 1: Coin stack + upward arrow -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2f5e"/><stop offset="1" stop-color="#2d4a8a"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g1)"/>
+          <circle cx="60" cy="78" r="18" fill="#f5c842"/>
+          <circle cx="60" cy="64" r="18" fill="#f8d666"/>
+          <circle cx="60" cy="50" r="18" fill="#ffe585"/>
+          <text x="60" y="56" text-anchor="middle" fill="#1a2f5e" font-size="20" font-weight="700" font-family="sans-serif">¥</text>
+          <path d="M 85 42 L 100 27 L 100 37 M 100 27 L 90 27" stroke="#4ade80" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g1)"/>
+          <circle cx="60" cy="78" r="18" fill="#f5c842"/>
+          <circle cx="60" cy="64" r="18" fill="#f8d666"/>
+          <circle cx="60" cy="50" r="18" fill="#ffe585"/>
+          <text x="60" y="56" text-anchor="middle" fill="#1a2f5e" font-size="20" font-weight="700" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+    </div>
+    <h3>1. Coin Stack</h3>
+    <p>Chồng xu vàng + mũi tên tăng. Cảm giác tích lũy, tài chính rõ ràng.</p>
+  </div>
+
+  <!-- CONCEPT 2: Clock + Yen -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g2)"/>
+          <circle cx="60" cy="60" r="36" fill="#fff" opacity="0.95"/>
+          <circle cx="60" cy="60" r="36" fill="none" stroke="#0f766e" stroke-width="3"/>
+          <line x1="60" y1="60" x2="60" y2="38" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="60" x2="78" y2="60" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="3" fill="#0f766e"/>
+          <text x="60" y="88" text-anchor="middle" fill="#0f766e" font-size="14" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g2)"/>
+          <circle cx="60" cy="60" r="36" fill="#fff" opacity="0.95"/>
+          <line x1="60" y1="60" x2="60" y2="38" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="60" x2="78" y2="60" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="3" fill="#0f766e"/>
+          <text x="60" y="88" text-anchor="middle" fill="#0f766e" font-size="14" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+    </div>
+    <h3>2. Clock + Yen</h3>
+    <p>Đồng hồ + ký hiệu tiền. Nhấn mạnh "thời gian = tiền bạc".</p>
+  </div>
+
+  <!-- CONCEPT 3: Bar chart -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2f5e"/><stop offset="1" stop-color="#3b5ba0"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g3)"/>
+          <rect x="28" y="70" width="14" height="26" rx="3" fill="#60a5fa"/>
+          <rect x="48" y="55" width="14" height="41" rx="3" fill="#93c5fd"/>
+          <rect x="68" y="40" width="14" height="56" rx="3" fill="#fbbf24"/>
+          <rect x="88" y="25" width="14" height="71" rx="3" fill="#4ade80"/>
+          <text x="36" y="38" fill="#fff" font-size="20" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g3)"/>
+          <rect x="36" y="72" width="11" height="22" rx="2" fill="#60a5fa"/>
+          <rect x="52" y="60" width="11" height="34" rx="2" fill="#93c5fd"/>
+          <rect x="68" y="48" width="11" height="46" rx="2" fill="#fbbf24"/>
+          <rect x="84" y="36" width="11" height="58" rx="2" fill="#4ade80"/>
+          <text x="38" y="44" fill="#fff" font-size="18" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+    </div>
+    <h3>3. Growth Chart</h3>
+    <p>Biểu đồ cột tăng dần. Trực quan, hợp app thống kê thu nhập.</p>
+  </div>
+
+  <!-- CONCEPT 4: Wallet -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g4)"/>
+          <rect x="28" y="40" width="64" height="46" rx="6" fill="#fff"/>
+          <rect x="28" y="40" width="64" height="12" rx="6" fill="#ede9fe"/>
+          <circle cx="78" cy="63" r="8" fill="#fbbf24"/>
+          <text x="78" y="67" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g4)"/>
+          <rect x="34" y="44" width="52" height="38" rx="5" fill="#fff"/>
+          <rect x="34" y="44" width="52" height="10" rx="5" fill="#ede9fe"/>
+          <circle cx="75" cy="63" r="7" fill="#fbbf24"/>
+          <text x="75" y="67" text-anchor="middle" fill="#7c3aed" font-size="9" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+    </div>
+    <h3>4. Wallet</h3>
+    <p>Ví + đồng xu. Ấm áp, thân thiện. Màu tím năng động.</p>
+  </div>
+
+  <!-- CONCEPT 5: Letter S monogram -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a2f5e"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g5)"/>
+          <text x="60" y="85" text-anchor="middle" fill="#fff" font-size="78" font-weight="900" font-family="-apple-system, sans-serif">S</text>
+          <line x1="48" y1="36" x2="72" y2="36" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+          <line x1="48" y1="94" x2="72" y2="94" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g5)"/>
+          <text x="60" y="85" text-anchor="middle" fill="#fff" font-size="78" font-weight="900" font-family="-apple-system, sans-serif">S</text>
+          <line x1="48" y1="36" x2="72" y2="36" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+          <line x1="48" y1="94" x2="72" y2="94" stroke="#fbbf24" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <h3>5. "S" Monogram</h3>
+    <p>Kiểu ký hiệu Yên/Dollar cách điệu. Minimal, tối giản, rất hiện đại.</p>
+  </div>
+
+  <!-- CONCEPT 6: Calendar with coin -->
+  <div class="card">
+    <div class="icon-wrap">
+      <div class="ios-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <defs><linearGradient id="g6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dc2626"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs>
+          <rect width="120" height="120" fill="url(#g6)"/>
+          <rect x="28" y="34" width="64" height="58" rx="6" fill="#fff"/>
+          <rect x="28" y="34" width="64" height="14" rx="6" fill="#dc2626"/>
+          <rect x="36" y="28" width="6" height="14" rx="2" fill="#7f1d1d"/>
+          <rect x="78" y="28" width="6" height="14" rx="2" fill="#7f1d1d"/>
+          <circle cx="60" cy="72" r="14" fill="#fbbf24"/>
+          <text x="60" y="77" text-anchor="middle" fill="#92400e" font-size="14" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+      <div class="android-style">
+        <svg viewBox="0 0 120 120" width="120" height="120">
+          <circle cx="60" cy="60" r="60" fill="url(#g6)"/>
+          <rect x="34" y="40" width="52" height="48" rx="5" fill="#fff"/>
+          <rect x="34" y="40" width="52" height="12" rx="5" fill="#dc2626"/>
+          <circle cx="60" cy="70" r="12" fill="#fbbf24"/>
+          <text x="60" y="75" text-anchor="middle" fill="#92400e" font-size="12" font-weight="800" font-family="sans-serif">¥</text>
+        </svg>
+      </div>
+    </div>
+    <h3>6. Payday Calendar</h3>
+    <p>Lịch + đồng xu. Gợi đến "ngày lương". Năng động, bắt mắt.</p>
+  </div>
+
+</div>
+
+<p style="text-align:center; margin-top:40px; color:#666;">
+  <strong>Trái:</strong> iOS (bo góc 27px) &nbsp;|&nbsp; <strong>Phải:</strong> Android (tròn)<br>
+  Sau khi bạn chọn, tôi sẽ tạo file icon 1024×1024 chất lượng cao và sinh tất cả size cần thiết.
+</p>
+
+</body>
+</html>

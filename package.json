@@ -1,0 +1,42 @@
+{
+  "name": "salary-tracker-app",
+  "version": "1.0.0",
+  "description": "Multi-language salary & shift tracker for mobile",
+  "main": "index.js",
+  "scripts": {
+    "sync": "cap sync",
+    "sync:ios": "cap sync ios",
+    "sync:android": "cap sync android",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android",
+    "run:ios": "cap run ios",
+    "run:android": "cap run android",
+    "build:ios": "cap sync ios && cap open ios",
+    "build:android": "cap sync android && cap open android"
+  },
+  "keywords": [
+    "salary",
+    "tracker",
+    "capacitor",
+    "ios",
+    "android"
+  ],
+  "author": "haiash",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@resvg/resvg-js": "^2.6.2",
+    "sharp": "^0.33.5"
+  }
+}
