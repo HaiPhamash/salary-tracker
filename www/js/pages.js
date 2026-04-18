@@ -2,6 +2,9 @@
    Pages — Home, Add Shift, Report, Settings rendering + form handlers
    ========================================================================= */
 
+let reportMotionAnimating = false;
+let reportSwipeSuppressUntil = 0;
+
 /* -------- Home -------- */
 
 function renderHomeStats() {
@@ -40,28 +43,73 @@ function renderHomeStats() {
 function renderShifts() {
   const el = document.getElementById('shiftList');
   if (!el) return;
-  const sorted = [...shifts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+  const grouped = {};
+  [...shifts]
+    .sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      return (a.start || '').localeCompare(b.start || '');
+    })
+    .forEach(s => {
+      if (!grouped[s.date]) grouped[s.date] = [];
+      grouped[s.date].push(s);
+    });
 
-  el.innerHTML = sorted.map(s => {
-    const job = getShiftJobMeta(s);
-    const hasOT = s.otH > 0 || s.isOT;
-    const otBadge = hasOT
-      ? `<span class="ot-badge">OT${s.otH > 0 ? ' ' + s.otH + 'h' : ''}</span>`
-      : '';
+  const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a)).slice(0, 5);
+  if (!dates.length) {
+    el.innerHTML = `<div class="recent-empty">${(L[curLang] && L[curLang].cal_noShift) || 'No shifts'}</div>`;
+    return;
+  }
 
-    return `<div class="shift-item">
-      <div class="shift-avatar" style="background:${job.color};">${job.icon}</div>
-      <div class="shift-meta">
-        <div class="shift-date">${fmtDate(s.date)}
-          <span class="job-tag" style="background:${job.color};">${job.name}</span>
+  el.innerHTML = dates.map(date => {
+    const dayShifts = grouped[date];
+    const expanded = !!homeExpandedDates[date];
+    const total = dayShifts.reduce((sum, shift) => sum + getShiftPay(shift), 0);
+    const otCount = dayShifts.filter(shift => shift.otH > 0 || shift.isOT).length;
+    const summaryMeta = [
+      dayShifts.length + ' ' + ((L[curLang] && L[curLang].shiftsUnit) || 'shifts'),
+      otCount ? otCount + ' OT' : ''
+    ].filter(Boolean).join(' · ');
+
+    return `<div class="recent-day-card${expanded ? ' open' : ''}">
+      <button class="recent-day-summary" onclick="toggleHomeDay('${date}')">
+        <div class="recent-day-date">
+          <div class="recent-day-title">${fmtDate(date)}</div>
+          <div class="recent-day-meta">${summaryMeta || '—'}</div>
         </div>
-        <div class="shift-time">${s.start ? s.start + '–' + s.end + ' · ' + s.hours + 'h' : L[curLang]['type_' + job.type]}${otBadge}</div>
-      </div>
-      <div class="shift-pay">
-        <div class="shift-pay-total">${fmt(getShiftPay(s))}</div>
+        <div class="recent-day-main"></div>
+        <div class="recent-day-pay">
+          <div class="recent-day-pay-total">${fmt(total)}</div>
+          <div class="recent-day-pay-sub">${expanded ? getReportText('hideDay', 'Hide') : getReportText('showDay', 'View shifts')}</div>
+        </div>
+        <div class="recent-day-chevron">›</div>
+      </button>
+      <div class="recent-day-shifts">
+        ${dayShifts.map(s => {
+          const job = getShiftJobMeta(s);
+          const hasOT = s.otH > 0 || s.isOT;
+          const otBadge = hasOT
+            ? `<span class="ot-badge">OT${s.otH > 0 ? ' ' + s.otH + 'h' : ''}</span>`
+            : '';
+
+          return `<div class="recent-shift-item">
+            <div class="shift-avatar" style="background:${job.color};">${job.icon}</div>
+            <div class="shift-meta">
+              <div class="shift-date">${job.name}</div>
+              <div class="shift-time">${getShiftTimeText(s, job)}${otBadge}</div>
+            </div>
+            <div class="shift-pay">
+              <div class="shift-pay-total">${fmt(getShiftPay(s))}</div>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleHomeDay(date) {
+  homeExpandedDates[date] = !homeExpandedDates[date];
+  renderShifts();
 }
 
 /* -------- Calendar (Add Shift page) -------- */
@@ -77,6 +125,187 @@ function monthShift(cursor, delta) {
   const [y, m] = cursor.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function shiftYmd(ymdStr, deltaDays) {
+  const d = new Date(ymdStr + 'T12:00:00');
+  d.setDate(d.getDate() + deltaDays);
+  return localYmd(d);
+}
+
+function getShiftTimeText(shift, job) {
+  return shift.start
+    ? shift.start + '–' + shift.end + ' · ' + shift.hours + 'h'
+    : L[curLang]['type_' + job.type];
+}
+
+function getReportText(key, fallback) {
+  return (L[curLang] && L[curLang][key]) || fallback;
+}
+
+function getReportMinDate() {
+  const profileStart = localYmd(getProfileStartDate());
+  const shiftDates = shifts.map(s => s.date).filter(Boolean).sort();
+  const earliestShift = shiftDates.length ? shiftDates[0] : profileStart;
+  return earliestShift < profileStart ? earliestShift : profileStart;
+}
+
+function getProfileStartDate() {
+  const profile = profiles.find(p => p.id === activeProfileId) || null;
+  if (profile && profile.createdAt) return new Date(profile.createdAt);
+  return new Date();
+}
+
+function getReportMaxDate() {
+  const shiftDates = shifts.map(s => s.date).filter(Boolean).sort();
+  const latestShift = shiftDates.length ? shiftDates[shiftDates.length - 1] : localYmd();
+  return latestShift > localYmd() ? latestShift : localYmd();
+}
+
+function getReportWeekBounds() {
+  return {
+    minEnd: getReportMinDate(),
+    maxEnd: getReportMaxDate()
+  };
+}
+
+function getReportYearBounds() {
+  const startYear = Number(getReportMinDate().slice(0, 4));
+  const maxYear = Number(getReportMaxDate().slice(0, 4));
+  return { startYear, maxYear };
+}
+
+function getReportMonthBounds() {
+  const minYm = getReportMinDate().slice(0, 7);
+  const maxYm = getReportMaxDate().slice(0, 7);
+  return { minYm, maxYm };
+}
+
+function initReportState() {
+  const now = new Date();
+  if (!reportWeekCursor) reportWeekCursor = localYmd(now);
+  if (!reportMonthCursor) reportMonthCursor = localYm(now);
+  if (!reportMonthWindowStart) reportMonthWindowStart = monthShift(reportMonthCursor, -3);
+  if (reportQuarterYear == null) reportQuarterYear = now.getFullYear();
+  if (reportQuarterIndex == null) reportQuarterIndex = Math.floor(now.getMonth() / 3);
+  if (reportYearCursor == null) reportYearCursor = now.getFullYear();
+  clampReportState();
+}
+
+function syncReportMonthWindow() {
+  const { minYm, maxYm } = getReportMonthBounds();
+  const maxWindowStart = monthShift(maxYm, -3);
+  let start = reportMonthWindowStart || monthShift(reportMonthCursor || maxYm, -3);
+
+  if (maxWindowStart >= minYm) {
+    if (start < minYm) start = minYm;
+    if (start > maxWindowStart) start = maxWindowStart;
+  } else {
+    start = minYm;
+  }
+
+  if (reportMonthCursor < start) start = reportMonthCursor;
+  if (reportMonthCursor > monthShift(start, 3)) {
+    start = monthShift(reportMonthCursor, -3);
+  }
+
+  if (maxWindowStart >= minYm && start > maxWindowStart) start = maxWindowStart;
+  if (start < minYm) start = minYm;
+  reportMonthWindowStart = start;
+}
+
+function clampReportState() {
+  const { minEnd, maxEnd } = getReportWeekBounds();
+  if (!reportWeekCursor || reportWeekCursor < minEnd) reportWeekCursor = minEnd;
+  if (reportWeekCursor > maxEnd) reportWeekCursor = maxEnd;
+
+  const { minYm, maxYm } = getReportMonthBounds();
+  if (!reportMonthCursor || reportMonthCursor < minYm) reportMonthCursor = minYm;
+  if (reportMonthCursor > maxYm) reportMonthCursor = maxYm;
+  syncReportMonthWindow();
+
+  const { startYear, maxYear } = getReportYearBounds();
+  reportQuarterYear = Math.min(maxYear, Math.max(startYear, reportQuarterYear == null ? maxYear : reportQuarterYear));
+  reportQuarterIndex = Math.min(3, Math.max(0, reportQuarterIndex == null ? 0 : reportQuarterIndex));
+  reportYearCursor = Math.min(maxYear, Math.max(startYear, reportYearCursor == null ? maxYear : reportYearCursor));
+}
+
+function getMonthLabel(ym, short) {
+  const [year, month] = ym.split('-').map(Number);
+  const monthName = (L[curLang].months && L[curLang].months[month - 1]) || month;
+  return short ? monthName : (monthName + ' ' + year);
+}
+
+function getQuarterLabel(year, index) {
+  const prefix = getReportText('qPrefix', 'Q');
+  return prefix === 'Q' ? `Q${index + 1} ${year}` : `${prefix} ${index + 1} / ${year}`;
+}
+
+function getQuarterMonths(year, index) {
+  const startMonth = index * 3 + 1;
+  return [0, 1, 2].map(offset => year + '-' + pad2(startMonth + offset));
+}
+
+function getYearList() {
+  const { startYear, maxYear } = getReportYearBounds();
+  const years = [];
+  for (let year = startYear; year <= maxYear; year++) years.push(year);
+  return years;
+}
+
+function getMonthShifts(src, ym) {
+  return src.filter(s => s.date.startsWith(ym));
+}
+
+function summarizeShiftBucket(list) {
+  return {
+    total: list.reduce((sum, shift) => sum + getShiftPay(shift), 0),
+    shifts: list.length,
+    hours: list.reduce((sum, shift) => sum + (shift.hours || 0), 0),
+    otHours: list.reduce((sum, shift) => sum + (shift.otH || 0), 0)
+  };
+}
+
+function formatChartValue(value) {
+  const sym = getCurSym();
+  if (!value) return '';
+  if (value >= 1000000) return sym + (value / 1000000).toFixed(1) + 'M';
+  if (value >= 1000) return sym + (value / 1000).toFixed(0) + 'k';
+  return sym + Math.round(value);
+}
+
+function renderShiftDetails(list) {
+  if (!list.length) return `<div class="recent-empty">${getReportText('noShifts', 'No shifts')}</div>`;
+  return `<div class="report-detail-list">${list.map(s => {
+    const j = getShiftJobMeta(s);
+    const otMark = (s.otH > 0 || s.isOT)
+      ? '<span style="color:var(--ot);font-weight:700;margin-left:4px;">OT</span>'
+      : '';
+    return `<div class="report-detail-row">
+      <div style="width:36px;height:36px;background:${j.color};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">${j.icon}</div>
+      <div class="report-detail-main">
+        <div class="report-detail-title">${fmtDate(s.date)}</div>
+        <div class="report-detail-sub">${getShiftTimeText(s, j)}${otMark}</div>
+      </div>
+      <div class="report-detail-pay">
+        <div class="main">${fmt(getShiftPay(s))}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderBreakdownDetails(items) {
+  if (!items.length) return `<div class="recent-empty">${getReportText('noData', 'No data yet')}</div>`;
+  return `<div class="report-breakdown-list">${items.map(item => `
+    <div class="report-breakdown-row">
+      <div class="report-breakdown-main">
+        <div class="report-breakdown-title">${item.label}</div>
+        <div class="report-breakdown-sub">${item.shifts} ${L[curLang].shiftsUnit} · ${item.hours.toFixed(0)}h${item.otHours > 0 ? ' · ' + item.otHours.toFixed(0) + 'h OT' : ''}</div>
+      </div>
+      <div class="report-breakdown-pay">
+        <div class="main">${fmt(item.total)}</div>
+      </div>
+    </div>`).join('')}</div>`;
 }
 
 function getCalendarActionDate() {
@@ -264,11 +493,7 @@ function renderCalDayPanel() {
   }
   if (!calSelectedDate) { dateLbl.textContent = ''; panel.innerHTML = ''; return; }
 
-  const dt = new Date(calSelectedDate + 'T12:00:00');
-  const locale = LOCALE_MAP[curLang] || curLang;
-  let dStr;
-  try { dStr = dt.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }); }
-  catch (e) { dStr = calSelectedDate; }
+  const dStr = formatYmdWithDow(calSelectedDate);
   dateLbl.textContent = (t.cal_panelTit || 'Shifts on {d}').replace('{d}', dStr);
 
   const dayShifts = shifts.filter(s => s.date === calSelectedDate);
@@ -416,6 +641,137 @@ function attachCalendarSwipe() {
   surface.addEventListener('click', (e) => {
     if (swiped) { e.stopPropagation(); e.preventDefault(); swiped = false; }
   }, true);
+}
+
+function attachReportSwipe() {
+  const surface = document.getElementById('reportMotion');
+  if (!surface || surface._swipeBound) return;
+  surface._swipeBound = true;
+  let x0 = 0, y0 = 0, dx = 0, dy = 0, active = false, dragging = false;
+  let lastX = 0, lastTs = 0, velocityX = 0;
+  let ignore = false;
+
+  const resetGesture = () => {
+    x0 = 0;
+    y0 = 0;
+    dx = 0;
+    dy = 0;
+    lastX = 0;
+    lastTs = 0;
+    velocityX = 0;
+    active = false;
+    dragging = false;
+    ignore = false;
+  };
+
+  const getDragOffset = (distance, width, blocked) => {
+    const sign = distance < 0 ? -1 : 1;
+    const abs = Math.abs(distance);
+    const follow = Math.min(abs, width * 0.18);
+    const extra = Math.max(0, abs - follow);
+    const eased = follow + extra * (blocked ? 0.14 : 0.46);
+    const limit = width * (blocked ? 0.22 : 0.74);
+    return sign * Math.min(limit, eased);
+  };
+
+  surface.addEventListener('touchstart', (e) => {
+    if (reportMotionAnimating || curPeriod === 'quarter') return;
+    ignore = !!(e.target.closest && e.target.closest('.chart-nav-btn,input,select,textarea,a,label'));
+    if (ignore) return;
+    const t = e.touches[0];
+    x0 = t.clientX;
+    y0 = t.clientY;
+    lastX = t.clientX;
+    lastTs = Date.now();
+    dx = 0;
+    dy = 0;
+    active = true;
+    dragging = false;
+    velocityX = 0;
+  }, { passive: true, capture: true });
+
+  surface.addEventListener('touchmove', (e) => {
+    if (!active || ignore) return;
+    const t = e.touches[0];
+    dx = t.clientX - x0;
+    dy = t.clientY - y0;
+    const now = Date.now();
+    const dt = Math.max(16, now - lastTs);
+    velocityX = (t.clientX - lastX) / dt;
+    lastX = t.clientX;
+    lastTs = now;
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (!dragging) {
+      if (absX < 10 && absY < 10) return;
+      if (absY > absX * 1.05) {
+        active = false;
+        return;
+      }
+      if (absX > absY * 1.12) dragging = true;
+    }
+
+    if (!dragging) return;
+    if (e.cancelable) e.preventDefault();
+
+    if (absX > 14) reportSwipeSuppressUntil = Date.now() + 240;
+    const blocked = !canNavigateReport(dx < 0 ? 1 : -1);
+    const width = Math.max(240, surface.offsetWidth || 320);
+    const offset = getDragOffset(dx, width, blocked);
+    const ratio = Math.min(1, Math.abs(offset) / Math.max(1, width));
+    const scale = 1 - (blocked ? 0.008 : 0.018) * ratio;
+    const opacity = blocked ? 1 - ratio * 0.06 : 1 - ratio * 0.18;
+    surface.style.transition = 'none';
+    surface.style.transform = 'translate3d(' + Math.round(offset) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
+    surface.style.opacity = String(Math.max(blocked ? 0.92 : 0.76, opacity));
+  }, { passive: false, capture: true });
+
+  surface.addEventListener('touchend', () => {
+    if (!active && !dragging) {
+      resetGesture();
+      return;
+    }
+    if (ignore) {
+      resetGesture();
+      return;
+    }
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const projected = absX + Math.min(76, Math.abs(velocityX) * 170);
+    if (dragging && projected > 92 && absX > absY * 1.05) {
+      reportSwipeSuppressUntil = Date.now() + 380;
+      const moved = navigateReport(dx < 0 ? 1 : -1);
+      if (!moved) {
+        reportMotionAnimating = false;
+        resetReportMotionPosition();
+      }
+    } else {
+      resetReportMotionPosition();
+    }
+    resetGesture();
+  }, { passive: true, capture: true });
+
+  surface.addEventListener('touchcancel', () => {
+    reportMotionAnimating = false;
+    resetReportMotionPosition();
+    resetGesture();
+  }, { passive: true, capture: true });
+
+  surface.addEventListener('click', (e) => {
+    if (Date.now() < reportSwipeSuppressUntil) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+}
+
+function resetReportMotionPosition() {
+  const motion = document.getElementById('reportMotion');
+  if (!motion) return;
+  motion.style.transition = 'transform .22s cubic-bezier(.18, .9, .32, 1.06), opacity .2s ease';
+  motion.style.transform = 'translate3d(0px,0,0) scale(1)';
+  motion.style.opacity = '1';
 }
 
 /* -------- Add Shift form handlers -------- */
@@ -633,9 +989,10 @@ function delShift(id) {
 /* -------- Report -------- */
 
 function setPeriod(p, el) {
+  initReportState();
   curPeriod = p;
   document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   renderReport(p);
 }
 
@@ -667,86 +1024,289 @@ function setJobFilter(id) {
   renderReport(curPeriod);
 }
 
-function renderReport(period) {
-  renderJobFilter();
-  const t   = L[curLang];
-  const now = new Date();
-  const src = filterJobId ? shifts.filter(s => s.jobId === filterJobId) : shifts;
+function canNavigateReport(delta) {
+  initReportState();
+  clampReportState();
+  if (curPeriod === 'week') {
+    const { minEnd, maxEnd } = getReportWeekBounds();
+    const next = shiftYmd(reportWeekCursor, delta * 7);
+    return next >= minEnd && next <= maxEnd;
+  }
+  if (curPeriod === 'month') {
+    const { minYm, maxYm } = getReportMonthBounds();
+    const next = monthShift(reportMonthCursor, delta);
+    return next >= minYm && next <= maxYm;
+  }
+  if (curPeriod === 'quarter') {
+    const { startYear, maxYear } = getReportYearBounds();
+    const next = reportQuarterYear + delta;
+    return next >= startYear && next <= maxYear;
+  }
+  const { startYear, maxYear } = getReportYearBounds();
+  const next = reportYearCursor + delta;
+  return next >= startYear && next <= maxYear;
+}
 
-  let filtered = [...src];
-  let labels = [], values = [];
+function animateReportNavigation(delta) {
+  if (reportMotionAnimating) return false;
+  if (!canNavigateReport(delta)) {
+    reportMotionAnimating = false;
+    resetReportMotionPosition();
+    return false;
+  }
+
+  const motion = document.getElementById('reportMotion');
+  if (!motion) return stepReport(delta);
+
+  const width = Math.max(240, motion.offsetWidth || 320);
+  const outOffset = delta < 0 ? width * 0.88 : -width * 0.88;
+  const inOffset  = delta < 0 ? -Math.min(72, width * 0.22) : Math.min(72, width * 0.22);
+  reportMotionAnimating = true;
+
+  motion.style.transition = 'transform .18s cubic-bezier(.32, .94, .6, 1), opacity .16s ease';
+  motion.style.transform = 'translate3d(' + Math.round(outOffset) + 'px,0,0) scale(.985)';
+  motion.style.opacity = '0.44';
+
+  window.setTimeout(() => {
+    const moved = stepReport(delta, false);
+    if (!moved) {
+      reportMotionAnimating = false;
+      resetReportMotionPosition();
+      return;
+    }
+    renderReport(curPeriod);
+    motion.style.transition = 'none';
+    motion.style.transform = 'translate3d(' + Math.round(inOffset) + 'px,0,0) scale(.988)';
+    motion.style.opacity = '0.64';
+    window.requestAnimationFrame(() => {
+      motion.style.transition = 'transform .3s cubic-bezier(.18, 1, .32, 1), opacity .24s ease';
+      motion.style.transform = 'translate3d(0px,0,0) scale(1)';
+      motion.style.opacity = '1';
+      window.setTimeout(() => { reportMotionAnimating = false; }, 320);
+    });
+  }, 150);
+  return true;
+}
+
+function navigateReport(delta) {
+  if (curPeriod === 'quarter') return false;
+  return animateReportNavigation(delta);
+}
+
+function stepReport(delta, shouldRender) {
+  let moved = false;
+  if (curPeriod === 'week') moved = shiftReportWeek(delta, shouldRender);
+  else if (curPeriod === 'month') moved = shiftReportMonth(delta, shouldRender);
+  else if (curPeriod === 'quarter') moved = shiftReportQuarterYear(delta, shouldRender);
+  else if (curPeriod === 'year') moved = shiftReportYear(delta, shouldRender);
+  return moved;
+}
+
+function shiftReportWeek(delta, shouldRender) {
+  clampReportState();
+  const { minEnd, maxEnd } = getReportWeekBounds();
+  const next = shiftYmd(reportWeekCursor, delta * 7);
+  if (next < minEnd || next > maxEnd) return false;
+  reportWeekCursor = next;
+  if (shouldRender !== false) renderReport('week');
+  return true;
+}
+
+function shiftReportMonth(delta, shouldRender) {
+  clampReportState();
+  const { minYm, maxYm } = getReportMonthBounds();
+  const next = monthShift(reportMonthCursor, delta);
+  if (next < minYm || next > maxYm) return false;
+  reportMonthCursor = next;
+  syncReportMonthWindow();
+  clampReportState();
+  if (shouldRender !== false) renderReport('month');
+  return true;
+}
+
+function selectReportMonth(ym) {
+  const { minYm, maxYm } = getReportMonthBounds();
+  if (ym < minYm || ym > maxYm) return;
+  reportMonthCursor = ym;
+  syncReportMonthWindow();
+  clampReportState();
+  renderReport('month');
+}
+
+function shiftReportQuarterYear(delta, shouldRender) {
+  clampReportState();
+  const { startYear, maxYear } = getReportYearBounds();
+  const next = reportQuarterYear + delta;
+  if (next < startYear || next > maxYear) return false;
+  reportQuarterYear = next;
+  if (shouldRender !== false) renderReport('quarter');
+  return true;
+}
+
+function selectReportQuarter(index) {
+  reportQuarterIndex = index;
+  renderReport('quarter');
+}
+
+function shiftReportYear(delta, shouldRender) {
+  clampReportState();
+  const { startYear, maxYear } = getReportYearBounds();
+  const next = reportYearCursor + delta;
+  if (next < startYear || next > maxYear) return false;
+  reportYearCursor = next;
+  if (shouldRender !== false) renderReport('year');
+  return true;
+}
+
+function selectReportYear(year) {
+  reportYearCursor = year;
+  renderReport('year');
+}
+
+function renderReport(period) {
+  initReportState();
+  clampReportState();
+  renderJobFilter();
+  const t = L[curLang];
+  const src = filterJobId ? shifts.filter(s => s.jobId === filterJobId) : shifts;
+  const barChart = document.getElementById('barChart');
+  const prevBtn = document.getElementById('chartPrevBtn');
+  const nextBtn = document.getElementById('chartNextBtn');
+  const chartStage = barChart ? barChart.closest('.chart-stage') : null;
+
+  let filtered = [];
+  let chartItems = [];
+  let chartTitle = t.chartTit;
+  let detailsTitle = t.detTit;
+  let summaryLabel = t.rPeriodLbl || t.wkLbl;
+  let rangeLabel = '';
+  let detailsHtml = '';
+  let canPrev = false;
+  let canNext = false;
 
   if (period === 'week') {
-    const today = localYmd(now);
-    const wa = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
-    const waStr = localYmd(wa);
-    filtered = src.filter(s => s.date >= waStr && s.date <= today);
+    const { minEnd, maxEnd } = getReportWeekBounds();
+    const endStr = reportWeekCursor;
+    const startStr = shiftYmd(endStr, -6);
+    filtered = src.filter(s => s.date >= startStr && s.date <= endStr);
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-      const ds = localYmd(d);
-      labels.push(t.days[d.getDay()]);
-      values.push(src.filter(s => s.date === ds).reduce((a, c) => a + getShiftPay(c), 0));
+      const ds = shiftYmd(endStr, -i);
+      const d = new Date(ds + 'T12:00:00');
+      chartItems.push({
+        label: t.days[d.getDay()],
+        value: src.filter(s => s.date === ds).reduce((sum, shift) => sum + getShiftPay(shift), 0),
+        selected: false,
+        action: ''
+      });
     }
+    summaryLabel = t.wkLbl;
+    rangeLabel = fmtDate(startStr) + ' - ' + fmtDate(endStr);
+    detailsHtml = renderShiftDetails([...filtered].sort((a, b) => b.date.localeCompare(a.date)));
+    canPrev = reportWeekCursor > minEnd;
+    canNext = reportWeekCursor < maxEnd;
   } else if (period === 'month') {
-    filtered = src.filter(s => s.date.startsWith(localYm(now)));
-    labels = [t.wkShort + '1', t.wkShort + '2', t.wkShort + '3', t.wkShort + '4'];
-    values = [0, 0, 0, 0];
-    filtered.forEach(s => {
-      const d = parseInt(s.date.slice(8, 10));
-      values[Math.min(Math.floor((d - 1) / 7), 3)] += getShiftPay(s);
-    });
+    const { minYm, maxYm } = getReportMonthBounds();
+    const visibleMonths = [0, 1, 2, 3].map(offset => monthShift(reportMonthWindowStart, offset));
+    chartItems = visibleMonths.map(ym => ({
+      label: getMonthLabel(ym, true),
+      value: getMonthShifts(src, ym).reduce((sum, shift) => sum + getShiftPay(shift), 0),
+      selected: ym === reportMonthCursor,
+      action: ym >= minYm && ym <= maxYm ? `selectReportMonth('${ym}')` : ''
+    }));
+    filtered = getMonthShifts(src, reportMonthCursor);
+    chartTitle = getReportText('monthIncome', 'Monthly income');
+    detailsTitle = getReportText('monthShiftDetails', 'Monthly shift details');
+    summaryLabel = getMonthLabel(reportMonthCursor, false);
+    rangeLabel = getMonthLabel(visibleMonths[0], false) + ' - ' + getMonthLabel(visibleMonths[visibleMonths.length - 1], false);
+    detailsHtml = renderShiftDetails([...filtered].sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      return (a.start || '').localeCompare(b.start || '');
+    }));
+    canPrev = reportMonthCursor > minYm;
+    canNext = reportMonthCursor < maxYm;
   } else if (period === 'quarter') {
-    const qS = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
-    filtered = src.filter(s => s.date >= localYmd(qS));
-    for (let i = 2; i >= 0; i--) {
-      const mo = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const ms = localYm(mo);
-      labels.push((mo.getMonth() + 1) + t.moShort);
-      values.push(src.filter(s => s.date.startsWith(ms)).reduce((a, c) => a + getShiftPay(c), 0));
-    }
+    const { startYear, maxYear } = getReportYearBounds();
+    const months = getQuarterMonths(reportQuarterYear, reportQuarterIndex);
+    chartItems = [0, 1, 2, 3].map(index => {
+      const quarterMonths = getQuarterMonths(reportQuarterYear, index);
+      const list = src.filter(s => quarterMonths.some(ym => s.date.startsWith(ym)));
+      return {
+        label: getQuarterLabel(reportQuarterYear, index).replace(' / ' + reportQuarterYear, '').replace(' ' + reportQuarterYear, ''),
+        value: summarizeShiftBucket(list).total,
+        selected: index === reportQuarterIndex,
+        action: `selectReportQuarter(${index})`
+      };
+    });
+    filtered = src.filter(s => months.some(ym => s.date.startsWith(ym)));
+    const breakdown = months.map(ym => {
+      const summary = summarizeShiftBucket(getMonthShifts(src, ym));
+      return { label: getMonthLabel(ym, false), ...summary };
+    });
+    chartTitle = getReportText('quarterIncome', 'Quarter income');
+    detailsTitle = getReportText('quarterBreakdown', '3-month breakdown');
+    summaryLabel = getQuarterLabel(reportQuarterYear, reportQuarterIndex);
+    rangeLabel = String(reportQuarterYear);
+    detailsHtml = renderBreakdownDetails(breakdown);
+    canPrev = reportQuarterYear > startYear;
+    canNext = reportQuarterYear < maxYear;
   } else {
-    filtered = src.filter(s => s.date.startsWith(now.getFullYear() + ''));
-    for (let i = 1; i <= 12; i++) {
-      const ms = now.getFullYear() + '-' + i.toString().padStart(2, '0');
-      labels.push(i + t.moShort);
-      values.push(src.filter(s => s.date.startsWith(ms)).reduce((a, c) => a + getShiftPay(c), 0));
-    }
+    const years = getYearList();
+    filtered = src.filter(s => s.date.startsWith(String(reportYearCursor)));
+    chartItems = years.map(year => ({
+      label: String(year),
+      value: src.filter(s => s.date.startsWith(String(year))).reduce((sum, shift) => sum + getShiftPay(shift), 0),
+      selected: year === reportYearCursor,
+      action: `selectReportYear(${year})`
+    }));
+    const breakdown = Array.from({ length: 12 }, (_, index) => {
+      const ym = reportYearCursor + '-' + pad2(index + 1);
+      const summary = summarizeShiftBucket(getMonthShifts(src, ym));
+      return { label: getMonthLabel(ym, false), ...summary };
+    });
+    chartTitle = getReportText('yearIncome', 'Year income');
+    detailsTitle = getReportText('yearBreakdown', '12-month breakdown');
+    summaryLabel = String(reportYearCursor);
+    rangeLabel = years[0] + ' - ' + years[years.length - 1];
+    detailsHtml = renderBreakdownDetails(breakdown);
+    canPrev = reportYearCursor > years[0];
+    canNext = reportYearCursor < years[years.length - 1];
   }
 
   const total  = filtered.reduce((a, c) => a + getShiftPay(c), 0);
   const totalH = filtered.reduce((a, c) => a + (c.hours || 0), 0);
-  const pLbls  = { week: t.wkLbl, month: t.moLbl, quarter: t.tabQ, year: t.yrLbl };
+  const totalOt = filtered.reduce((sum, shift) => sum + (shift.otH || 0), 0);
 
-  set('rPeriodLbl', pLbls[period] || period);
+  set('rPeriodLbl', summaryLabel);
   set('rMainVal', fmt(total));
-  set('rSub', filtered.length + ' ' + t.shiftsUnit + ' · ' + totalH.toFixed(0) + 'h');
+  set('rSub', filtered.length + ' ' + t.shiftsUnit + ' · ' + totalH.toFixed(0) + 'h' + (totalOt > 0 ? ' · ' + totalOt.toFixed(0) + 'h OT' : ''));
+  set('chartTit', chartTitle);
+  set('chartRangeLbl', rangeLabel);
+  set('detTit', detailsTitle);
 
+  const showNav = period !== 'quarter';
+  if (chartStage) chartStage.classList.toggle('chart-stage--navless', !showNav);
+  if (prevBtn) {
+    prevBtn.hidden = !showNav;
+    prevBtn.disabled = !showNav || !canPrev;
+  }
+  if (nextBtn) {
+    nextBtn.hidden = !showNav;
+    nextBtn.disabled = !showNav || !canNext;
+  }
+  const values = chartItems.map(item => item.value);
   const mx = Math.max(...values, 1);
+  const hasSelection = chartItems.some(item => item.selected);
   const maxIdx = values.indexOf(Math.max(...values));
-  document.getElementById('barChart').innerHTML = values.map((v, i) => `
-    <div class="bar-wrap">
-      <div class="bar-value">${v > 0 ? '¥' + (v / 1000).toFixed(0) + 'k' : ''}</div>
-      <div class="bar${i === maxIdx ? ' acc' : ''}" style="height:${Math.max(4, Math.round(v / mx * 80))}px;"></div>
-      <div class="bar-label">${labels[i]}</div>
-    </div>`).join('');
+  if (barChart) {
+    barChart.innerHTML = chartItems.map((item, index) => `
+      <button type="button" class="bar-wrap${item.selected ? ' is-selected' : ''}" ${item.action ? `onclick="${item.action}"` : 'disabled'}>
+        <div class="bar-value">${item.value > 0 ? formatChartValue(item.value) : ''}</div>
+        <div class="bar${(item.selected || (!hasSelection && index === maxIdx)) ? ' acc' : ''}" style="height:${Math.max(4, Math.round(item.value / mx * 80))}px;"></div>
+        <div class="bar-label">${item.label}</div>
+      </button>`).join('');
+  }
 
-  document.getElementById('rDetails').innerHTML =
-    [...filtered].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map(s => {
-      const j = getShiftJobMeta(s);
-      const otMark = (s.otH > 0 || s.isOT)
-        ? '<span style="color:var(--ot);font-weight:700;margin-left:4px;">OT</span>'
-        : '';
-      return `<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;gap:10px;">
-        <div style="width:36px;height:36px;background:${j.color};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${j.icon}</div>
-        <div style="flex:1;">
-          <div style="font-size:13px;font-weight:600;">${fmtDate(s.date)}</div>
-          <div style="font-size:11px;color:var(--text-muted);">${s.start ? s.start + '–' + s.end + ' · ' + s.hours + 'h' : L[curLang]['type_' + j.type]}${otMark}</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:14px;font-weight:700;color:var(--primary);">${fmt(getShiftPay(s))}</div>
-        </div>
-      </div>`;
-    }).join('');
+  document.getElementById('rDetails').innerHTML = detailsHtml;
 }
 
 /* -------- Settings / Job Cards -------- */
@@ -799,7 +1359,7 @@ function goPage(page, el) {
   document.getElementById('nav-' + page).classList.add('active');
   curPage = page;
   if (page === 'home')     { renderHomeStats(); renderShifts(); }
-  if (page === 'report')   renderReport(curPeriod);
+  if (page === 'report')   { attachReportSwipe(); renderReport(curPeriod); }
   if (page === 'settings') renderJobCards();
   if (page === 'add')      { renderCalendar(); attachCalendarSwipe(); }
 }

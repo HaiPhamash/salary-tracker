@@ -97,16 +97,22 @@ function setPH(id, v) {
   if (e && v != null) e.placeholder = v;
 }
 
+function formatYmdWithDow(ymdStr) {
+  if (!ymdStr) return '';
+  const parts = ymdStr.split('-');
+  if (parts.length !== 3) return ymdStr;
+  const y = parts[0];
+  const m = parts[1];
+  const d = parts[2];
+  const dt = new Date(Number(y), Number(m) - 1, Number(d));
+  const days = (L[curLang] && L[curLang].days) || L.en.days;
+  const dow = days[dt.getDay()] || '';
+  return y + '/' + m + '/' + d + ' (' + dow + ')';
+}
+
 function syncDateDisplay(inputId, displayId) {
   const inp  = document.getElementById(inputId);
   const disp = document.getElementById(displayId);
   if (!inp || !disp) return;
-  const locale = LOCALE_MAP[curLang] || curLang;
-  if (!inp.value) { disp.textContent = ''; return; }
-  const dt = new Date(inp.value + 'T12:00:00');
-  try {
-    disp.textContent = dt.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-  } catch (e) {
-    disp.textContent = inp.value;
-  }
+  disp.textContent = formatYmdWithDow(inp.value);
 }

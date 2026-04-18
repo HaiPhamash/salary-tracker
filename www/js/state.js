@@ -36,6 +36,13 @@ let calViewMode = 'grid';
 let calCursor = null;
 let calSelectedDate = null;
 let editShiftId = null;
+let homeExpandedDates = {};
+let reportWeekCursor = null;
+let reportMonthCursor = null;
+let reportMonthWindowStart = null;
+let reportQuarterYear = null;
+let reportQuarterIndex = null;
+let reportYearCursor = null;
 
 let profiles = [];
 let activeProfileId = null;

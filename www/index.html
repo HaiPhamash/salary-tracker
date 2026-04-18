@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
   <meta name="theme-color" content="#1a2f5e">
   <title>Salary Tracker</title>
 
@@ -100,9 +101,20 @@
         <div class="sub"   id="rSub">0 ca</div>
       </div>
 
-      <div class="chart-box">
-        <h3 id="chartTit">Thu nhập 7 ngày</h3>
-        <div class="bar-chart" id="barChart"></div>
+      <div class="report-motion" id="reportMotion">
+        <div class="chart-box">
+          <div class="chart-head">
+            <div>
+              <h3 id="chartTit">Thu nhập 7 ngày</h3>
+              <div class="chart-range" id="chartRangeLbl"></div>
+            </div>
+          </div>
+          <div class="chart-stage">
+            <button class="chart-nav-btn chart-nav-btn--side chart-nav-btn--left" id="chartPrevBtn" onclick="navigateReport(-1)" aria-label="Previous period">&lt;</button>
+            <div class="bar-chart" id="barChart"></div>
+            <button class="chart-nav-btn chart-nav-btn--side chart-nav-btn--right" id="chartNextBtn" onclick="navigateReport(1)" aria-label="Next period">&gt;</button>
+          </div>
+        </div>
       </div>
       <div style="height:12px;"></div>
 
@@ -223,12 +235,12 @@
         <div class="dt-group">
           <div class="dt-row">
             <span class="dt-label" id="lbl_start">Bắt đầu</span>
-            <div class="dt-pill"><span class="dt-display" id="disp_date"></span><input type="date" id="inp_date" class="dt-input" oninput="onShiftDateChange()"></div>
+            <div class="dt-pill" onclick="openDatePicker('inp_date','disp_date',onShiftDateChange)"><span class="dt-display" id="disp_date"></span><input type="hidden" id="inp_date"></div>
             <div class="dt-pill dt-pill-time"><input type="time" id="inp_start" value="09:00" oninput="calcPrev()"></div>
           </div>
           <div class="dt-row">
             <span class="dt-label" id="lbl_end">Kết thúc</span>
-            <div class="dt-pill"><span class="dt-display" id="disp_date_end"></span><input type="date" id="inp_date_end" class="dt-input" oninput="syncDateDisplay('inp_date_end','disp_date_end');calcPrev()"></div>
+            <div class="dt-pill" onclick="openDatePicker('inp_date_end','disp_date_end',calcPrev)"><span class="dt-display" id="disp_date_end"></span><input type="hidden" id="inp_date_end"></div>
             <div class="dt-pill dt-pill-time"><input type="time" id="inp_end" value="18:00" oninput="calcPrev()"></div>
           </div>
           <div class="dt-row">
@@ -242,7 +254,7 @@
         <div class="dt-group">
           <div class="dt-row">
             <span class="dt-label" id="lbl_date_daily">Ngày</span>
-            <div class="dt-pill"><span class="dt-display" id="disp_date_daily"></span><input type="date" id="inp_date_daily" class="dt-input" oninput="syncDateDisplay('inp_date_daily','disp_date_daily')"></div>
+            <div class="dt-pill" onclick="openDatePicker('inp_date_daily','disp_date_daily')"><span class="dt-display" id="disp_date_daily"></span><input type="hidden" id="inp_date_daily"></div>
           </div>
         </div>
       </div>
@@ -273,6 +285,26 @@
       </div>
 
       <button class="btn" onclick="addShift()" id="btnSave" style="margin-top:14px;">💾 Lưu ca làm việc</button>
+      <div style="height:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Date picker (custom, localized) -->
+  <div class="modal" id="moDatePicker" onclick="if(event.target===this)closeDatePicker()">
+    <div class="modal-sheet dp-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="dpTit">Chọn ngày</div>
+      <div class="dp-toolbar">
+        <button class="dp-nav" onclick="dpShiftMonth(-1)" aria-label="prev">‹</button>
+        <div class="dp-month-lbl" id="dpMonthLbl">—</div>
+        <button class="dp-nav" onclick="dpShiftMonth(1)" aria-label="next">›</button>
+      </div>
+      <div class="dp-weekdays" id="dpWeekdays"></div>
+      <div class="dp-grid" id="dpGrid"></div>
+      <div class="dp-actions">
+        <button class="btn btn--small empty-setup-secondary" onclick="closeDatePicker()" id="dpCancelBtn">Huỷ</button>
+        <button class="btn btn--small" onclick="dpGoToday()" id="dpTodayBtn">Hôm nay</button>
+      </div>
       <div style="height:6px;"></div>
     </div>
   </div>

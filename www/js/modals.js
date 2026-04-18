@@ -99,6 +99,8 @@ function applyLang() {
   setPH('ob_name',  t.phObName);
 
   syncDateDisplay('inp_date', 'disp_date');
+  syncDateDisplay('inp_date_end', 'disp_date_end');
+  syncDateDisplay('inp_date_daily', 'disp_date_daily');
 
   renderHomeStats();
   renderShifts();
@@ -122,6 +124,101 @@ function openSupportPage() {
   openExternalUrl(SUPPORT_URL);
 }
 
+/* -------- Custom date picker -------- */
+
+let _dpTargetInputId  = null;
+let _dpTargetDisplayId = null;
+let _dpOnChange       = null;
+let _dpCursor         = null;
+let _dpSelected       = null;
+
+function openDatePicker(inputId, displayId, onChange) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  _dpTargetInputId   = inputId;
+  _dpTargetDisplayId = displayId || null;
+  _dpOnChange        = onChange  || null;
+  _dpSelected        = inp.value || localYmd();
+  _dpCursor          = _dpSelected.slice(0, 7);
+  const t = L[curLang] || L.en;
+  set('dpTit',       t.dpTit       || 'Select date');
+  set('dpCancelBtn', t.dpCancel    || 'Cancel');
+  set('dpTodayBtn',  t.dpToday     || 'Today');
+  renderDpCalendar();
+  document.getElementById('moDatePicker').classList.add('show');
+}
+
+function closeDatePicker() {
+  document.getElementById('moDatePicker').classList.remove('show');
+  _dpTargetInputId   = null;
+  _dpTargetDisplayId = null;
+  _dpOnChange        = null;
+}
+
+function renderDpCalendar() {
+  const t = L[curLang] || L.en;
+  if (!_dpCursor) _dpCursor = localYmd().slice(0, 7);
+  const [y, m] = _dpCursor.split('-').map(Number);
+
+  const monthName = (t.months && t.months[m - 1]) || String(m);
+  const lbl = (t.cal_monthYearTpl || '{y} / {m}')
+    .replace('{y}', y)
+    .replace('{m}', monthName);
+  set('dpMonthLbl', lbl);
+
+  const days = t.days || L.en.days;
+  document.getElementById('dpWeekdays').innerHTML = days.map((d, i) =>
+    '<div class="' + (i === 0 ? 'dp-sun' : i === 6 ? 'dp-sat' : '') + '">' + d + '</div>'
+  ).join('');
+
+  const first = new Date(y, m - 1, 1);
+  const leading = first.getDay();
+  const start = new Date(y, m - 1, 1 - leading);
+  const today = localYmd();
+
+  let html = '';
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const date = ymd(d);
+    const inMonth = d.getMonth() === (m - 1);
+    const dow = d.getDay();
+    const cls = ['dp-cell'];
+    if (!inMonth) cls.push('muted');
+    if (dow === 0) cls.push('sun');
+    if (dow === 6) cls.push('sat');
+    if (date === today) cls.push('today');
+    if (date === _dpSelected) cls.push('selected');
+    html += '<div class="' + cls.join(' ') + '" onclick="dpPick(\'' + date + '\')">' + d.getDate() + '</div>';
+  }
+  document.getElementById('dpGrid').innerHTML = html;
+}
+
+function dpShiftMonth(delta) {
+  _dpCursor = monthShift(_dpCursor, delta);
+  renderDpCalendar();
+}
+
+function dpGoToday() {
+  const today = localYmd();
+  _dpCursor = today.slice(0, 7);
+  dpPick(today);
+}
+
+function dpPick(date) {
+  _dpSelected = date;
+  const inp = document.getElementById(_dpTargetInputId);
+  if (inp) {
+    inp.value = date;
+  }
+  if (_dpTargetInputId && _dpTargetDisplayId) {
+    syncDateDisplay(_dpTargetInputId, _dpTargetDisplayId);
+  }
+  const cb = _dpOnChange;
+  closeDatePicker();
+  if (cb) cb(date);
+}
+
 /* -------- Day sheet & shift form -------- */
 
 let _daySheetDate = null;
@@ -136,11 +233,7 @@ function openDaySheet(date) {
   _daySheetDate = date || calSelectedDate || localYmd();
   calSelectedDate = _daySheetDate;
   const t = L[curLang];
-  const dt = new Date(_daySheetDate + 'T12:00:00');
-  const locale = LOCALE_MAP[curLang] || curLang;
-  let dStr;
-  try { dStr = dt.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'short' }); }
-  catch (e) { dStr = _daySheetDate; }
+  const dStr = formatYmdWithDow(_daySheetDate);
   set('daySheetTit', (t.cal_addFor || 'Add shift for {d}').replace('{d}', dStr));
   set('btnDayNewShift', t.cal_newShift || 'New shift');
   renderDaySheetTemplates();
@@ -453,7 +546,7 @@ async function exportPDF() {
   const reportBody = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:900px;margin:0 auto;">
       <h2 style="color:#1a2f5e;margin-bottom:4px;">💴 Salary Tracker — ${userName || ''}</h2>
-      <p style="color:#666;font-size:13px;margin-bottom:16px;">${t.pdfGenerated}: ${new Date().toLocaleString()} | ${t.pdfCurrency}: ${getCurLabel()}</p>
+      <p style="color:#666;font-size:13px;margin-bottom:16px;">${t.pdfGenerated}: ${formatYmdWithDow(localYmd())} ${pad2(new Date().getHours())}:${pad2(new Date().getMinutes())} | ${t.pdfCurrency}: ${getCurLabel()}</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="background:#1a2f5e;color:#fff;">
           <th style="padding:8px;text-align:left;">${t.pdfDate}</th><th>${t.pdfJob}</th><th>${t.pdfStart}</th><th>${t.pdfEnd}</th><th>${t.pdfHours}</th><th>${t.pdfOT}</th><th style="text-align:right;">${t.pdfPay}</th><th>${t.pdfNote}</th>

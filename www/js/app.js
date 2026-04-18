@@ -26,6 +26,7 @@ function init() {
   if (inpDate) inpDate.value = today;
   calCursor = today.slice(0, 7);
   calSelectedDate = today;
+  initReportState();
   fillJobSel();
   applyLang();
   renderShifts();
