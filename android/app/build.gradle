@@ -18,15 +18,28 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('upload-keystore.jks')
-            storePassword 'salary2026'
-            keyAlias 'upload'
-            keyPassword 'salary2026'
+            def keystorePropsFile = rootProject.file('keystore.properties')
+            if (keystorePropsFile.exists()) {
+                def props = new Properties()
+                props.load(new FileInputStream(keystorePropsFile))
+                storeFile file(props['storeFile'] ?: 'upload-keystore.jks')
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            } else if (System.getenv('STRACK_STORE_PASSWORD')) {
+                storeFile file(System.getenv('STRACK_STORE_FILE') ?: 'upload-keystore.jks')
+                storePassword System.getenv('STRACK_STORE_PASSWORD')
+                keyAlias System.getenv('STRACK_KEY_ALIAS') ?: 'upload'
+                keyPassword System.getenv('STRACK_KEY_PASSWORD')
+            }
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            def keystorePropsFile = rootProject.file('keystore.properties')
+            if (keystorePropsFile.exists() || System.getenv('STRACK_STORE_PASSWORD')) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

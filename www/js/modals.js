@@ -266,7 +266,7 @@ function renderDaySheetTemplates() {
       <div class="swipe-row-inner">
         <div class="tpl-row" onclick="applyTemplate(${tpl.id})">
           <div class="tpl-row-time">${tpl.start} – ${tpl.end}</div>
-          <div class="tpl-row-name">${job.icon} ${job.name}</div>
+          <div class="tpl-row-name">${esc(job.icon)} ${esc(job.name)}</div>
           <div class="tpl-row-icon">📌</div>
         </div>
       </div>
@@ -316,12 +316,13 @@ function applyTemplate(tplId) {
   toast('✅');
 }
 
-function deleteTemplate(id) {
+async function deleteTemplate(id) {
   const t = L[curLang];
   const msg = t.cal_delTpl || 'Delete this template?';
-  if (!confirm(msg)) return;
+  if (!(await confirmDialog(msg))) return;
   shiftTemplates = shiftTemplates.filter(x => x.id !== id);
   save();
+  hapticMedium();
   renderDaySheetTemplates();
 }
 
@@ -533,19 +534,19 @@ async function exportPDF() {
     const job = getShiftJobMeta(s);
     return `<tr>
       <td>${s.date}</td>
-      <td>${job.icon} ${job.name}</td>
+      <td>${esc(job.icon)} ${esc(job.name)}</td>
       <td>${s.start || '-'}</td>
       <td>${s.end || '-'}</td>
       <td>${s.hours || 0}h</td>
       <td>${s.otH > 0 ? s.otH + 'h ' + t.pdfOT : '-'}</td>
-      <td style="text-align:right;font-weight:600;">${sym}${getShiftPay(s).toLocaleString()}</td>
-      <td>${s.note || ''}</td>
+      <td style="text-align:right;font-weight:600;">${sym}${fmtNumber(getShiftPay(s))}</td>
+      <td>${esc(s.note || '')}</td>
     </tr>`;
   }).join('');
 
   const reportBody = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:900px;margin:0 auto;">
-      <h2 style="color:#1a2f5e;margin-bottom:4px;">💴 Salary Tracker — ${userName || ''}</h2>
+      <h2 style="color:#1a2f5e;margin-bottom:4px;">💴 Salary Tracker — ${esc(userName || '')}</h2>
       <p style="color:#666;font-size:13px;margin-bottom:16px;">${t.pdfGenerated}: ${formatYmdWithDow(localYmd())} ${pad2(new Date().getHours())}:${pad2(new Date().getMinutes())} | ${t.pdfCurrency}: ${getCurLabel()}</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="background:#1a2f5e;color:#fff;">
@@ -554,7 +555,7 @@ async function exportPDF() {
         <tbody>${rows}</tbody>
         <tfoot><tr style="background:#f0f4ff;font-weight:700;font-size:14px;">
           <td colspan="6" style="padding:10px;">${t.pdfTotal}</td>
-          <td style="text-align:right;color:#1a2f5e;">${sym}${total.toLocaleString()}</td>
+          <td style="text-align:right;color:#1a2f5e;">${sym}${fmtNumber(total)}</td>
           <td></td>
         </tr></tfoot>
       </table>
@@ -672,7 +673,7 @@ function renderAlwList() {
 
   el.innerHTML = editAlws.map((a, i) => `
     <div class="allowance-item">
-      <div class="allowance-info">${a.name} — ${getCurSym()}${a.amount.toLocaleString()}
+      <div class="allowance-info">${esc(a.name)} — ${getCurSym()}${fmtNumber(a.amount)}
         <span>${t[a.per === 'day' ? 'opt_day' : 'opt_month']}</span>
       </div>
       <button class="allowance-del" onclick="removeAlw(${i})">✕</button>
@@ -733,27 +734,43 @@ function saveJob() {
   }
 
   closeJob();
-  save();
+  save({ toast: true });
+  hapticMedium();
   renderJobCards();
   fillJobSel();
   renderCalendar();
   renderHomeStats();
 }
 
-function delJob(id) {
+async function delJob(id) {
   if (jobs.length <= 1) return;
+  const t = L[curLang] || {};
   const usedByShift = shifts.some(s => s.jobId === id);
-  const usedByTemplate = shiftTemplates.some(t => t.jobId === id);
+  const usedByTemplate = shiftTemplates.some(tp => tp.jobId === id);
   if (usedByShift || usedByTemplate) {
-    alert((L[curLang] && L[curLang].jobInUseMsg) || 'Không thể xoá công việc đang được dùng trong ca làm hoặc mẫu ca.');
+    await alertDialog(t.jobInUseMsg || 'Cannot delete a job that is used by shifts or templates.');
     return;
   }
-  const msg = (L[curLang] && L[curLang].confirmDelJob) || 'Delete this job?';
-  if (!confirm(msg)) return;
-  jobs = jobs.filter(j => j.id !== id);
+  const msg = t.confirmDelJob || 'Delete this job?';
+  if (!(await confirmDialog(msg))) return;
+  const idx = jobs.findIndex(j => j.id === id);
+  if (idx < 0) return;
+  const removed = jobs[idx];
+  jobs.splice(idx, 1);
   save();
+  hapticMedium();
   renderJobCards();
   fillJobSel();
+  const undoLbl = t.undoLbl || 'Undo';
+  toast('🗑️ ' + (t.deletedLbl || 'Deleted') + ' · ' + undoLbl, {
+    duration: 5000,
+    onClick: () => {
+      jobs.splice(idx, 0, removed);
+      save();
+      renderJobCards();
+      fillJobSel();
+    }
+  });
 }
 
 /* -------- Profiles -------- */
@@ -783,7 +800,7 @@ function renderProfilesList() {
     return `<div class="select-option${isActive ? ' selected' : ''}" onclick="selectProfile('${p.id}')">
       <span class="select-option-flag">👤</span>
       <div>
-        <div class="select-option-name">${p.name}</div>
+        <div class="select-option-name">${esc(p.name)}</div>
         <div class="select-option-sub">${langObj.f} ${langObj.n}</div>
       </div>
       <span class="select-option-check">✓</span>
@@ -844,19 +861,20 @@ function renderDelProfileList() {
     return `<div class="select-option" onclick="confirmDelProfile('${p.id}')" style="cursor:pointer;">
       <span class="select-option-flag" style="font-size:20px;">❌</span>
       <div>
-        <div class="select-option-name">${p.name}${isActive ? ' ✓' : ''}</div>
+        <div class="select-option-name">${esc(p.name)}${isActive ? ' ✓' : ''}</div>
         <div class="select-option-sub">${langObj.f} ${langObj.n}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-function confirmDelProfile(id) {
+async function confirmDelProfile(id) {
   const p = profiles.find(x => x.id === id);
   if (!p) return;
   const t = L[curLang];
   const msg = (t.confirmDelProfile || 'Delete this user and all their data?') + '\n\n👤 ' + p.name;
-  if (!confirm(msg)) return;
+  if (!(await confirmDialog(msg))) return;
+  hapticMedium();
   deleteProfile(id);
   if (!activeProfileId) {
     closeDelProfileModal();

@@ -22,9 +22,9 @@
   border-radius: 50%;
 }
 
-.balance-label  { font-size: 12px; opacity: .75; margin-bottom: 6px; }
+.balance-label  { font-size: 12px; opacity: .85; margin-bottom: 6px; }
 .balance-amount { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
-.balance-sub    { font-size: 11px; opacity: .65; }
+.balance-sub    { font-size: 11px; opacity: .85; }
 
 .balance-row {
   display: flex;
@@ -457,12 +457,6 @@
 .report-summary .sub   { font-size: 12px; opacity: .7; }
 
 .report-motion {
-  transform: translate3d(0, 0, 0) scale(1);
-  transform-origin: center center;
-  transition: transform .28s cubic-bezier(.22, 1, .36, 1), opacity .28s ease;
-  will-change: transform, opacity;
-  touch-action: pan-y;
-  backface-visibility: hidden;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -491,6 +485,7 @@
   position: relative;
   padding: 0 34px;
   overflow: hidden;
+  touch-action: pan-y;
 }
 .chart-stage--navless {
   padding: 0;
@@ -523,13 +518,20 @@
 .chart-nav-btn--right { right: 0; }
 
 .bar-chart {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 100px;
+  height: 160px;
+  padding-top: 18px;
   transition: transform .28s cubic-bezier(.22, 1, .36, 1), opacity .28s ease;
   will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
   touch-action: pan-y;
+  background:
+    linear-gradient(to top, var(--border) 1px, transparent 1px) 0 25% / 100% 25% repeat-y;
+  background-clip: padding-box;
 }
 .bar-wrap {
   flex: 1;
@@ -791,18 +793,21 @@
 .nav-item.active .nav-label { color: var(--primary); }
 
 .nav-fab {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   background: linear-gradient(135deg, var(--accent), #d4821a);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  box-shadow: 0 4px 12px rgba(245, 166, 35, .4);
-  margin-top: -20px;
+  font-size: 28px;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(245, 166, 35, .45), 0 2px 4px rgba(0, 0, 0, .12);
+  margin-top: -24px;
   cursor: pointer;
+  transition: transform .15s ease;
 }
+.nav-item:active .nav-fab { transform: scale(.95); }
 
 /* =========================================================================
    Modals — bottom sheet pattern (slide up from bottom)

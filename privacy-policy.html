@@ -32,22 +32,24 @@
 <!-- =============================================== ENGLISH =============================================== -->
 <div class="section active" id="en">
   <h1>Privacy Policy — Salary Tracker</h1>
-  <p class="meta">Effective date: April 16, 2026 · Last updated: April 16, 2026</p>
+  <p class="meta">Effective date: April 18, 2026 · Last updated: April 18, 2026</p>
 
   <p>This Privacy Policy describes how <strong>Salary Tracker</strong> ("we", "the app", or "this application") handles information when you use the mobile application on iOS and Android. By installing or using Salary Tracker, you agree to the practices described below.</p>
 
   <h2>1. Summary</h2>
-  <p><strong>Salary Tracker does not collect, transmit, or share any personal data.</strong> All information you enter — including your name, wages, shifts, jobs, and settings — is stored only on your device using the local browser storage (<code>localStorage</code>). We have no servers, no accounts, no analytics, and no advertising.</p>
+  <p><strong>Salary Tracker does not collect, transmit, or share any personal data.</strong> All information you enter — including your name, wages, shifts, jobs, and settings — is stored only on your device using the local browser storage (<code>localStorage</code>). We have no servers, no accounts, no analytics, and no advertising. The app is fully local-only.</p>
 
   <h2>2. Information You Enter</h2>
   <p>The app lets you enter and save:</p>
   <ul>
-    <li>Your display name (used only for greeting)</li>
+    <li>Your display name (used only for greeting on the home screen)</li>
     <li>Job details (name, wage rate, overtime rules, allowances, icon, color)</li>
     <li>Shift records (date, start/end time, break, hours, pay, notes)</li>
-    <li>Preferences (language, currency, notification setting)</li>
+    <li>Shift templates and monthly income goal</li>
+    <li>Preferences (language, currency, theme)</li>
+    <li>Multiple profiles (each profile keeps its own jobs, shifts, and settings)</li>
   </ul>
-  <p>This data is stored in your device's local storage under the key <code>strack_v3</code>. It never leaves your device.</p>
+  <p>This data is stored in your device's local storage under the keys <code>strack_profiles</code> (the profile list) and <code>strack_data_&lt;profileId&gt;</code> (one entry per profile). It never leaves your device.</p>
 
   <h2>3. Information We Do NOT Collect</h2>
   <ul>
@@ -59,10 +61,10 @@
   </ul>
 
   <h2>4. Permissions</h2>
-  <p>Salary Tracker requests no special permissions on either iOS or Android. The app works fully offline after installation.</p>
+  <p>Salary Tracker requests no special permissions on either iOS or Android. The app does not access contacts, photos, camera, microphone, location, calendar, or notifications. The app works fully offline after installation.</p>
 
-  <h2>5. Data Export</h2>
-  <p>You can export your data as CSV or PDF/HTML at any time from the app's Settings → Export menu. Exported files are saved to your device's storage through the standard browser download mechanism. We have no access to these files.</p>
+  <h2>5. Data Export &amp; Sharing</h2>
+  <p>You can export your data as CSV or PDF/HTML at any time from the app's Settings → Export menu. Exported files are handed to the operating system's native share sheet (iOS Share Sheet / Android Share intent), which lets you save to Files, send via email, or share to another app of your choice. The share sheet is only invoked when you tap the export button — the app never shares anything automatically and never uploads exported files to any server. We have no access to these files.</p>
 
   <h2>6. Data Deletion</h2>
   <p>You can clear all stored data at any time through Settings → Clear Data. Uninstalling the app will also remove all data. Since nothing is sent to us, there is nothing for us to delete on our side.</p>
@@ -84,22 +86,24 @@
 <!-- =============================================== TIẾNG VIỆT =============================================== -->
 <div class="section" id="vi">
   <h1>Chính sách bảo mật — Salary Tracker</h1>
-  <p class="meta">Ngày hiệu lực: 16/04/2026 · Cập nhật lần cuối: 16/04/2026</p>
+  <p class="meta">Ngày hiệu lực: 18/04/2026 · Cập nhật lần cuối: 18/04/2026</p>
 
   <p>Chính sách bảo mật này mô tả cách <strong>Salary Tracker</strong> ("chúng tôi", "ứng dụng") xử lý thông tin khi bạn sử dụng ứng dụng trên iOS và Android. Khi cài đặt hoặc sử dụng Salary Tracker, bạn đồng ý với các quy định dưới đây.</p>
 
   <h2>1. Tóm tắt</h2>
-  <p><strong>Salary Tracker không thu thập, truyền đi hoặc chia sẻ bất kỳ dữ liệu cá nhân nào.</strong> Toàn bộ thông tin bạn nhập — tên, lương, ca làm, công việc, cài đặt — đều chỉ lưu trên thiết bị của bạn trong bộ nhớ cục bộ của trình duyệt (<code>localStorage</code>). Chúng tôi không có máy chủ, tài khoản, phân tích hay quảng cáo.</p>
+  <p><strong>Salary Tracker không thu thập, truyền đi hoặc chia sẻ bất kỳ dữ liệu cá nhân nào.</strong> Toàn bộ thông tin bạn nhập — tên, lương, ca làm, công việc, cài đặt — đều chỉ lưu trên thiết bị của bạn trong bộ nhớ cục bộ của trình duyệt (<code>localStorage</code>). Chúng tôi không có máy chủ, tài khoản, phân tích hay quảng cáo. Ứng dụng hoạt động hoàn toàn cục bộ (local-only).</p>
 
   <h2>2. Thông tin bạn nhập</h2>
   <p>Ứng dụng cho phép bạn nhập và lưu:</p>
   <ul>
-    <li>Tên hiển thị (chỉ dùng để chào)</li>
+    <li>Tên hiển thị (chỉ dùng để hiển thị lời chào trên màn hình chính)</li>
     <li>Chi tiết công việc (tên, mức lương, quy tắc OT, phụ cấp, biểu tượng, màu)</li>
     <li>Bản ghi ca làm (ngày, giờ bắt đầu/kết thúc, nghỉ, số giờ, thu nhập, ghi chú)</li>
-    <li>Tuỳ chọn (ngôn ngữ, đơn vị tiền tệ, cài đặt thông báo)</li>
+    <li>Mẫu ca (template) và mục tiêu thu nhập theo tháng</li>
+    <li>Tuỳ chọn (ngôn ngữ, đơn vị tiền tệ, giao diện)</li>
+    <li>Nhiều hồ sơ (mỗi hồ sơ giữ riêng danh sách công việc, ca và cài đặt)</li>
   </ul>
-  <p>Dữ liệu này lưu trong local storage của thiết bị ở key <code>strack_v3</code> và không bao giờ rời khỏi thiết bị.</p>
+  <p>Dữ liệu này lưu trong local storage của thiết bị ở các key <code>strack_profiles</code> (danh sách hồ sơ) và <code>strack_data_&lt;profileId&gt;</code> (một bản ghi cho mỗi hồ sơ). Dữ liệu không bao giờ rời khỏi thiết bị.</p>
 
   <h2>3. Thông tin chúng tôi KHÔNG thu thập</h2>
   <ul>
@@ -111,10 +115,10 @@
   </ul>
 
   <h2>4. Quyền</h2>
-  <p>Salary Tracker không yêu cầu quyền đặc biệt nào trên iOS hoặc Android. Ứng dụng hoạt động hoàn toàn ngoại tuyến sau khi cài đặt.</p>
+  <p>Salary Tracker không yêu cầu quyền đặc biệt nào trên iOS hoặc Android. Ứng dụng không truy cập danh bạ, ảnh, camera, micro, vị trí, lịch hay thông báo. Ứng dụng hoạt động hoàn toàn ngoại tuyến sau khi cài đặt.</p>
 
-  <h2>5. Xuất dữ liệu</h2>
-  <p>Bạn có thể xuất dữ liệu dưới dạng CSV hoặc PDF/HTML bất cứ lúc nào từ menu Cài đặt → Xuất dữ liệu. File xuất được lưu vào thiết bị qua cơ chế tải xuống của trình duyệt. Chúng tôi không truy cập được các file này.</p>
+  <h2>5. Xuất &amp; chia sẻ dữ liệu</h2>
+  <p>Bạn có thể xuất dữ liệu dưới dạng CSV hoặc PDF/HTML bất cứ lúc nào từ menu Cài đặt → Xuất dữ liệu. File xuất sẽ được chuyển cho bảng chia sẻ gốc của hệ điều hành (Share Sheet trên iOS / Share intent trên Android), cho phép bạn lưu vào Files, gửi qua email hoặc chia sẻ sang ứng dụng khác do bạn chọn. Bảng chia sẻ chỉ mở khi bạn nhấn nút xuất — ứng dụng không bao giờ chia sẻ tự động và không tải file xuất lên bất kỳ máy chủ nào. Chúng tôi không truy cập được các file này.</p>
 
   <h2>6. Xoá dữ liệu</h2>
   <p>Bạn có thể xoá toàn bộ dữ liệu bất cứ lúc nào qua Cài đặt → Xoá dữ liệu. Gỡ ứng dụng cũng sẽ xoá hết dữ liệu. Vì không có gì được gửi đến chúng tôi, chúng tôi không có gì để xoá ở phía chúng tôi.</p>
@@ -136,22 +140,24 @@
 <!-- =============================================== 日本語 =============================================== -->
 <div class="section" id="ja">
   <h1>プライバシーポリシー — Salary Tracker</h1>
-  <p class="meta">発効日：2026年4月16日 · 最終更新：2026年4月16日</p>
+  <p class="meta">発効日：2026年4月18日 · 最終更新：2026年4月18日</p>
 
   <p>本プライバシーポリシーは、<strong>Salary Tracker</strong>（以下「本アプリ」）が iOS および Android のモバイルアプリケーションでどのように情報を取り扱うかを説明します。本アプリをインストールまたは使用することで、以下の内容に同意したものとみなされます。</p>
 
   <h2>1. 概要</h2>
-  <p><strong>Salary Tracker は、いかなる個人データも収集、送信、共有しません。</strong> お名前、給与、シフト、勤務先、設定など、入力したすべての情報は、お使いのデバイスのローカルストレージ（<code>localStorage</code>）にのみ保存されます。サーバー、アカウント、アナリティクス、広告は一切ありません。</p>
+  <p><strong>Salary Tracker は、いかなる個人データも収集、送信、共有しません。</strong> お名前、給与、シフト、勤務先、設定など、入力したすべての情報は、お使いのデバイスのローカルストレージ（<code>localStorage</code>）にのみ保存されます。サーバー、アカウント、アナリティクス、広告は一切ありません。本アプリは完全にローカルのみで動作します。</p>
 
   <h2>2. 入力する情報</h2>
   <p>本アプリでは以下の情報を入力・保存できます。</p>
   <ul>
-    <li>表示名（挨拶にのみ使用）</li>
+    <li>表示名（ホーム画面の挨拶表示にのみ使用）</li>
     <li>勤務先の詳細（名称、時給・日給・月給、残業ルール、手当、アイコン、色）</li>
     <li>シフト記録（日付、開始・終了時刻、休憩、時間数、給与、メモ）</li>
-    <li>設定（言語、通貨、通知設定）</li>
+    <li>シフトテンプレートおよび月間収入目標</li>
+    <li>設定（言語、通貨、テーマ）</li>
+    <li>複数プロフィール（プロフィールごとに勤務先・シフト・設定を別々に保持）</li>
   </ul>
-  <p>これらのデータはデバイスのローカルストレージのキー <code>strack_v3</code> に保存され、デバイスから外に出ることはありません。</p>
+  <p>これらのデータはデバイスのローカルストレージのキー <code>strack_profiles</code>（プロフィール一覧）および <code>strack_data_&lt;profileId&gt;</code>（プロフィールごとに 1 件）に保存され、デバイスから外に出ることはありません。</p>
 
   <h2>3. 収集しない情報</h2>
   <ul>

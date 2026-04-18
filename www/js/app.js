@@ -9,7 +9,8 @@ async function setupNativeChrome() {
     if (Plugins.StatusBar) {
       await Plugins.StatusBar.setStyle({ style: 'DARK' });
       if (window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android') {
-        await Plugins.StatusBar.setBackgroundColor({ color: '#1a2f5e' });
+        const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#1a2f5e';
+        await Plugins.StatusBar.setBackgroundColor({ color: primary });
       }
     }
     if (Plugins.SplashScreen) {

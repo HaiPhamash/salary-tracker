@@ -1,6 +1,7 @@
 node_modules/
 *.jks
 *.keystore
+android/keystore.properties
 node_modules
 ios/App/build
 android/build

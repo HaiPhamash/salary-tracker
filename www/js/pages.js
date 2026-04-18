@@ -37,7 +37,36 @@ function renderHomeStats() {
   set('hrsV',     moHours.toFixed(0) + 'h');
   set('otV',      moOT.toFixed(0) + 'h OT');
   set('jobsV',    jobs.length + ' ' + t.jobsL.toLowerCase());
-  set('goalV',    '—');
+
+  const goalCard = document.getElementById('goalCard');
+  if (goalCard && !goalCard.dataset.bound) {
+    goalCard.dataset.bound = '1';
+    goalCard.addEventListener('click', editMonthlyGoal);
+    goalCard.setAttribute('role', 'button');
+    goalCard.setAttribute('tabindex', '0');
+    goalCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editMonthlyGoal(); }
+    });
+  }
+  if (monthlyGoal > 0) {
+    const pct = Math.min(999, Math.round((moAmt / monthlyGoal) * 100));
+    set('goalV', pct + '%');
+  } else {
+    set('goalV', '—');
+  }
+}
+
+async function editMonthlyGoal() {
+  const t = L[curLang];
+  const msg = (t.goalPromptMsg || 'Enter your monthly income goal (0 to clear):');
+  const title = t.goalPromptTitle || t.goalL || 'Monthly goal';
+  const v = await promptDialog(msg, title, monthlyGoal ? String(monthlyGoal) : '');
+  if (v == null) return;
+  const n = parseInt(String(v).replace(/[^0-9]/g, ''), 10);
+  monthlyGoal = Number.isFinite(n) && n > 0 ? n : 0;
+  save({ toast: true });
+  hapticLight();
+  renderHomeStats();
 }
 
 function renderShifts() {
@@ -56,7 +85,19 @@ function renderShifts() {
 
   const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a)).slice(0, 5);
   if (!dates.length) {
-    el.innerHTML = `<div class="recent-empty">${(L[curLang] && L[curLang].cal_noShift) || 'No shifts'}</div>`;
+    const t = L[curLang] || {};
+    if (!jobs.length) {
+      el.innerHTML = getNoJobsStateHtml('home');
+      return;
+    }
+    el.innerHTML = `<div class="empty-setup-card empty-setup-card--home">
+      <div class="empty-setup-icon">📅</div>
+      <div class="empty-setup-title">${t.emptyShiftTitle || t.cal_noShift || 'No shifts yet'}</div>
+      <div class="empty-setup-body">${t.emptyShiftBody || 'Tap ➕ to add your first shift.'}</div>
+      <div class="empty-setup-actions">
+        <button class="btn btn--accent btn--small" onclick="goPage('add',document.getElementById('nav-add'))">${t.addTit || 'Add shift'}</button>
+      </div>
+    </div>`;
     return;
   }
 
@@ -92,9 +133,9 @@ function renderShifts() {
             : '';
 
           return `<div class="recent-shift-item">
-            <div class="shift-avatar" style="background:${job.color};">${job.icon}</div>
+            <div class="shift-avatar" style="background:${job.color};">${esc(job.icon)}</div>
             <div class="shift-meta">
-              <div class="shift-date">${job.name}</div>
+              <div class="shift-date">${esc(job.name)}</div>
               <div class="shift-time">${getShiftTimeText(s, job)}${otBadge}</div>
             </div>
             <div class="shift-pay">
@@ -282,7 +323,7 @@ function renderShiftDetails(list) {
       ? '<span style="color:var(--ot);font-weight:700;margin-left:4px;">OT</span>'
       : '';
     return `<div class="report-detail-row">
-      <div style="width:36px;height:36px;background:${j.color};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">${j.icon}</div>
+      <div style="width:36px;height:36px;background:${j.color};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">${esc(j.icon)}</div>
       <div class="report-detail-main">
         <div class="report-detail-title">${fmtDate(s.date)}</div>
         <div class="report-detail-sub">${getShiftTimeText(s, j)}${otMark}</div>
@@ -451,13 +492,13 @@ function renderCalList() {
           const j = getShiftJobMeta(s);
           const timeText = s.start ? `${s.start}<span>${s.end}</span>` : `<strong>${t['type_' + j.type] || ''}</strong>`;
           const metaText = s.start
-            ? `${s.hours}h${s.note ? ' · ' + s.note : ''}`
-            : `${t['type_' + j.type] || ''}${s.note ? ' · ' + s.note : ''}`;
+            ? `${s.hours}h${s.note ? ' · ' + esc(s.note) : ''}`
+            : `${t['type_' + j.type] || ''}${s.note ? ' · ' + esc(s.note) : ''}`;
           return `<button class="cal-timeline-shift" onclick="event.stopPropagation();openEditShift(${s.id})">
             <div class="cal-timeline-time">${timeText}</div>
             <div class="cal-timeline-bar" style="background:${j.color};"></div>
             <div class="cal-timeline-main">
-              <div class="cal-timeline-job">${j.icon} ${j.name}</div>
+              <div class="cal-timeline-job">${esc(j.icon)} ${esc(j.name)}</div>
               <div class="cal-timeline-meta">${metaText}</div>
             </div>
             <div class="cal-timeline-pay">${fmt(getShiftPay(s))}</div>
@@ -510,7 +551,7 @@ function renderCalDayPanel() {
           <div class="panel-shift-time">${time}</div>
           <div class="panel-shift-bar"></div>
           <div class="panel-shift-main">
-            <div class="panel-shift-name">${j.icon} ${j.name}</div>
+            <div class="panel-shift-name">${esc(j.icon)} ${esc(j.name)}</div>
             <div class="panel-shift-sub">${sub}</div>
           </div>
         </div>
@@ -644,7 +685,7 @@ function attachCalendarSwipe() {
 }
 
 function attachReportSwipe() {
-  const surface = document.getElementById('reportMotion');
+  const surface = document.querySelector('#reportMotion .chart-stage');
   if (!surface || surface._swipeBound) return;
   surface._swipeBound = true;
   let x0 = 0, y0 = 0, dx = 0, dy = 0, active = false, dragging = false;
@@ -667,12 +708,14 @@ function attachReportSwipe() {
   const getDragOffset = (distance, width, blocked) => {
     const sign = distance < 0 ? -1 : 1;
     const abs = Math.abs(distance);
-    const follow = Math.min(abs, width * 0.18);
+    const follow = Math.min(abs, width * 0.22);
     const extra = Math.max(0, abs - follow);
-    const eased = follow + extra * (blocked ? 0.14 : 0.46);
-    const limit = width * (blocked ? 0.22 : 0.74);
+    const eased = follow + extra * (blocked ? 0.16 : 0.52);
+    const limit = width * (blocked ? 0.24 : 0.84);
     return sign * Math.min(limit, eased);
   };
+
+  const getMotion = () => document.getElementById('barChart');
 
   surface.addEventListener('touchstart', (e) => {
     if (reportMotionAnimating || curPeriod === 'quarter') return;
@@ -719,12 +762,11 @@ function attachReportSwipe() {
     const blocked = !canNavigateReport(dx < 0 ? 1 : -1);
     const width = Math.max(240, surface.offsetWidth || 320);
     const offset = getDragOffset(dx, width, blocked);
-    const ratio = Math.min(1, Math.abs(offset) / Math.max(1, width));
-    const scale = 1 - (blocked ? 0.008 : 0.018) * ratio;
-    const opacity = blocked ? 1 - ratio * 0.06 : 1 - ratio * 0.18;
-    surface.style.transition = 'none';
-    surface.style.transform = 'translate3d(' + Math.round(offset) + 'px,0,0) scale(' + scale.toFixed(3) + ')';
-    surface.style.opacity = String(Math.max(blocked ? 0.92 : 0.76, opacity));
+    const motion = getMotion();
+    if (!motion) return;
+    motion.style.transition = 'none';
+    motion.style.transform = 'translate3d(' + Math.round(offset) + 'px,0,0)';
+    motion.style.opacity = String(Math.max(blocked ? 0.94 : 0.82, 1 - Math.abs(offset) / (width * 1.6)));
   }, { passive: false, capture: true });
 
   surface.addEventListener('touchend', () => {
@@ -767,10 +809,10 @@ function attachReportSwipe() {
 }
 
 function resetReportMotionPosition() {
-  const motion = document.getElementById('reportMotion');
+  const motion = document.getElementById('barChart');
   if (!motion) return;
-  motion.style.transition = 'transform .22s cubic-bezier(.18, .9, .32, 1.06), opacity .2s ease';
-  motion.style.transform = 'translate3d(0px,0,0) scale(1)';
+  motion.style.transition = 'transform .24s cubic-bezier(.16, .9, .28, 1.04), opacity .18s ease';
+  motion.style.transform = 'translate3d(0px,0,0)';
   motion.style.opacity = '1';
 }
 
@@ -784,7 +826,7 @@ function fillJobSel() {
     return;
   }
   sel.innerHTML = jobs.map(j =>
-    `<option value="${j.id}">${j.icon} ${j.name} — ${L[curLang]['type_' + j.type]}</option>`
+    `<option value="${j.id}">${esc(j.icon)} ${esc(j.name)} — ${L[curLang]['type_' + j.type]}</option>`
   ).join('');
   if (jobs.length) onJobChange();
 }
@@ -853,7 +895,9 @@ function calcPrev() {
     if (st && en && ds) {
       const sDate = new Date(ds + 'T' + st + ':00');
       const eDate = new Date(de + 'T' + en + ':00');
-      let m = (eDate - sDate) / 60000 - brk;
+      let m = (eDate - sDate) / 60000;
+      if (m < 0 && ds === de) m += 1440;
+      m -= brk;
       if (m < 0) m = 0;
       hours = parseFloat((m / 60).toFixed(2));
     }
@@ -930,7 +974,9 @@ function addShift() {
     const de = document.getElementById('inp_date_end').value || ds;
     const sDate = new Date(ds + 'T' + sh.start + ':00');
     const eDate = new Date(de + 'T' + sh.end + ':00');
-    let m = (eDate - sDate) / 60000 - sh.breakMin;
+    let m = (eDate - sDate) / 60000;
+    if (m < 0 && ds === de) m += 1440;
+    m -= sh.breakMin;
     if (m < 0) m = 0;
     sh.hours = parseFloat((m / 60).toFixed(2));
     const r = calcHourly(sh.hours, job.rate, job.otThreshold, job.otMultiplier);
@@ -946,7 +992,8 @@ function addShift() {
 
   if (isHourly && sh.start && sh.end) saveTemplateFromShift(sh);
 
-  save();
+  save({ toast: true });
+  hapticMedium();
   closeShiftForm();
   calSelectedDate = sh.date;
   calCursor = sh.date.slice(0, 7);
@@ -975,15 +1022,30 @@ function saveTemplateFromShift(sh) {
   });
 }
 
-function delShift(id) {
-  const t = L[curLang];
+async function delShift(id) {
+  const t = L[curLang] || {};
   const msg = t.cal_delShift || 'Delete this shift?';
-  if (!confirm(msg)) return;
-  shifts = shifts.filter(s => s.id !== id);
+  if (!(await confirmDialog(msg))) return;
+  const idx = shifts.findIndex(s => s.id === id);
+  if (idx < 0) return;
+  const removed = shifts[idx];
+  shifts.splice(idx, 1);
   save();
+  hapticMedium();
   renderCalendar();
   renderShifts();
   renderHomeStats();
+  const undoLbl = t.undoLbl || 'Undo';
+  toast('🗑️ ' + (t.deletedLbl || 'Deleted') + ' · ' + undoLbl, {
+    duration: 5000,
+    onClick: () => {
+      shifts.splice(idx, 0, removed);
+      save();
+      renderCalendar();
+      renderShifts();
+      renderHomeStats();
+    }
+  });
 }
 
 /* -------- Report -------- */
@@ -1012,7 +1074,7 @@ function renderJobFilter() {
   html += jobs.map(j =>
     `<div class="job-chip${filterJobId === j.id ? ' active' : ''}"
       onclick="setJobFilter(${j.id},this)"
-      style="${chipStyle(filterJobId === j.id, j.color)}">${j.icon} ${j.name}</div>`
+      style="${chipStyle(filterJobId === j.id, j.color)}">${esc(j.icon)} ${esc(j.name)}</div>`
   ).join('');
 
   row.innerHTML = html;
@@ -1055,17 +1117,17 @@ function animateReportNavigation(delta) {
     return false;
   }
 
-  const motion = document.getElementById('reportMotion');
+  const motion = document.getElementById('barChart');
   if (!motion) return stepReport(delta);
 
   const width = Math.max(240, motion.offsetWidth || 320);
-  const outOffset = delta < 0 ? width * 0.88 : -width * 0.88;
-  const inOffset  = delta < 0 ? -Math.min(72, width * 0.22) : Math.min(72, width * 0.22);
+  const outOffset = delta < 0 ? width * 0.96 : -width * 0.96;
+  const inOffset  = delta < 0 ? -Math.min(56, width * 0.16) : Math.min(56, width * 0.16);
   reportMotionAnimating = true;
 
-  motion.style.transition = 'transform .18s cubic-bezier(.32, .94, .6, 1), opacity .16s ease';
-  motion.style.transform = 'translate3d(' + Math.round(outOffset) + 'px,0,0) scale(.985)';
-  motion.style.opacity = '0.44';
+  motion.style.transition = 'transform .18s cubic-bezier(.32, .94, .6, 1), opacity .14s ease';
+  motion.style.transform = 'translate3d(' + Math.round(outOffset) + 'px,0,0)';
+  motion.style.opacity = '0.32';
 
   window.setTimeout(() => {
     const moved = stepReport(delta, false);
@@ -1076,13 +1138,13 @@ function animateReportNavigation(delta) {
     }
     renderReport(curPeriod);
     motion.style.transition = 'none';
-    motion.style.transform = 'translate3d(' + Math.round(inOffset) + 'px,0,0) scale(.988)';
-    motion.style.opacity = '0.64';
+    motion.style.transform = 'translate3d(' + Math.round(inOffset) + 'px,0,0)';
+    motion.style.opacity = '0.56';
     window.requestAnimationFrame(() => {
-      motion.style.transition = 'transform .3s cubic-bezier(.18, 1, .32, 1), opacity .24s ease';
-      motion.style.transform = 'translate3d(0px,0,0) scale(1)';
+      motion.style.transition = 'transform .28s cubic-bezier(.16, 1, .3, 1), opacity .2s ease';
+      motion.style.transform = 'translate3d(0px,0,0)';
       motion.style.opacity = '1';
-      window.setTimeout(() => { reportMotionAnimating = false; }, 320);
+      window.setTimeout(() => { reportMotionAnimating = false; }, 300);
     });
   }, 150);
   return true;
@@ -1301,7 +1363,7 @@ function renderReport(period) {
     barChart.innerHTML = chartItems.map((item, index) => `
       <button type="button" class="bar-wrap${item.selected ? ' is-selected' : ''}" ${item.action ? `onclick="${item.action}"` : 'disabled'}>
         <div class="bar-value">${item.value > 0 ? formatChartValue(item.value) : ''}</div>
-        <div class="bar${(item.selected || (!hasSelection && index === maxIdx)) ? ' acc' : ''}" style="height:${Math.max(4, Math.round(item.value / mx * 80))}px;"></div>
+        <div class="bar${(item.selected || (!hasSelection && index === maxIdx)) ? ' acc' : ''}" style="height:${Math.max(4, Math.round(item.value / mx * 140))}px;"></div>
         <div class="bar-label">${item.label}</div>
       </button>`).join('');
   }
@@ -1330,14 +1392,14 @@ function renderJobCards() {
       ? t.otAfterTpl.replace('{h}', j.otThreshold).replace('{m}', j.otMultiplier)
       : t.otTimesTpl.replace('{m}', j.otMultiplier);
     const alwTags = j.allowances
-      .map(a => `<span class="allowance-tag">${a.name} ${sym}${a.amount}/${a.per === 'day' ? t.alwDayShort : t.alwMonShort}</span>`)
+      .map(a => `<span class="allowance-tag">${esc(a.name)} ${sym}${a.amount}/${a.per === 'day' ? t.alwDayShort : t.alwMonShort}</span>`)
       .join('');
 
     return `<div class="job-card">
       <div class="job-card-top">
-        <div class="job-avatar" style="background:${j.color};">${j.icon}</div>
+        <div class="job-avatar" style="background:${j.color};">${esc(j.icon)}</div>
         <div class="job-info">
-          <div class="job-name">${j.name}</div>
+          <div class="job-name">${esc(j.name)}</div>
           <div class="job-rate">${rateLabel} · ${t['type_' + j.type]}</div>
         </div>
         <div class="job-actions">

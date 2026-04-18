@@ -31,6 +31,7 @@ let editAlws = [];
 let otIsOn = false;
 let curCurrency = 'jpy';
 let userName = '';
+let monthlyGoal = 0;
 let curJobType = 'hourly';
 let calViewMode = 'grid';
 let calCursor = null;
@@ -75,7 +76,7 @@ function persistActiveProfileDataSilently() {
   if (!activeProfileId) return;
   try {
     localStorage.setItem(DATA_PREFIX + activeProfileId, JSON.stringify({
-      jobs, shifts, shiftTemplates, nextJobId, nextShiftId, nextTemplateId, curCurrency, calViewMode
+      jobs, shifts, shiftTemplates, nextJobId, nextShiftId, nextTemplateId, curCurrency, calViewMode, monthlyGoal
     }));
   } catch (e) {}
 }
@@ -97,9 +98,15 @@ function loadProfiles() {
         profiles.push(p);
         activeProfileId = id;
         localStorage.setItem(DATA_PREFIX + id, JSON.stringify({
-          jobs: d.jobs || [], shifts: d.shifts || [],
-          nextJobId: d.nextJobId || 1, nextShiftId: d.nextShiftId || 1,
-          curCurrency: d.curCurrency || 'jpy'
+          jobs: d.jobs || [],
+          shifts: d.shifts || [],
+          shiftTemplates: d.shiftTemplates || [],
+          nextJobId: d.nextJobId || 1,
+          nextShiftId: d.nextShiftId || 1,
+          nextTemplateId: d.nextTemplateId || 1,
+          curCurrency: d.curCurrency || 'jpy',
+          calViewMode: d.calViewMode || 'grid',
+          monthlyGoal: Number(d.monthlyGoal) || 0
         }));
         localStorage.removeItem(LS_LEGACY);
         saveProfiles();
@@ -118,7 +125,7 @@ function saveProfiles() {
 
 function loadProfileData() {
   if (!activeProfileId) {
-    jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1;
+    jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1; monthlyGoal = 0;
     return false;
   }
   const p = profiles.find(x => x.id === activeProfileId);
@@ -126,7 +133,7 @@ function loadProfileData() {
   try {
     const d = JSON.parse(localStorage.getItem(DATA_PREFIX + activeProfileId) || 'null');
     if (!d) {
-      jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1;
+      jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1; monthlyGoal = 0;
       return false;
     }
     jobs            = d.jobs            || [];
@@ -137,19 +144,20 @@ function loadProfileData() {
     nextTemplateId  = d.nextTemplateId  || (shiftTemplates.reduce((m, t) => Math.max(m, t.id || 0), 0) + 1);
     curCurrency     = d.curCurrency     || curCurrency;
     calViewMode     = d.calViewMode     || 'grid';
+    monthlyGoal     = Number(d.monthlyGoal) || 0;
     if (hydrateStoredData()) persistActiveProfileDataSilently();
     return true;
   } catch (e) {
-    jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1;
+    jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1; monthlyGoal = 0;
     return false;
   }
 }
 
-function save() {
+function save(opts) {
   if (!activeProfileId) return;
   try {
     localStorage.setItem(DATA_PREFIX + activeProfileId, JSON.stringify({
-      jobs, shifts, shiftTemplates, nextJobId, nextShiftId, nextTemplateId, curCurrency, calViewMode
+      jobs, shifts, shiftTemplates, nextJobId, nextShiftId, nextTemplateId, curCurrency, calViewMode, monthlyGoal
     }));
     const p = profiles.find(x => x.id === activeProfileId);
     if (p) {
@@ -158,7 +166,7 @@ function save() {
       p.lastActiveAt = Date.now();
     }
     saveProfiles();
-    toast('💾');
+    if (opts && opts.toast) toast('💾');
   } catch (e) {}
 }
 
@@ -177,6 +185,7 @@ function createProfile(name, lang) {
   nextJobId = 1;
   nextShiftId = 1;
   nextTemplateId = 1;
+  monthlyGoal = 0;
   save();
   return p;
 }
@@ -201,10 +210,10 @@ function deleteProfile(id) {
   saveProfiles();
 }
 
-function clearData() {
+async function clearData() {
   const msg = (typeof L !== 'undefined' && L[curLang] && L[curLang].confirmClear) || 'Delete all data?';
-  if (!confirm(msg)) return;
-  jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1;
+  if (!(await confirmDialog(msg))) return;
+  jobs = []; shifts = []; shiftTemplates = []; nextJobId = 1; nextShiftId = 1; nextTemplateId = 1; monthlyGoal = 0;
   save();
   location.reload();
 }

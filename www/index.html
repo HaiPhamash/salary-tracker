@@ -52,7 +52,7 @@
         <div class="stat-card"><div class="stat-icon">⏱️</div><div class="stat-value" id="hrsV">148h</div><div class="stat-label" id="hrsL">Giờ làm tháng này</div></div>
         <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value" id="otV">22h OT</div><div class="stat-label" id="otL">Tăng ca</div></div>
         <div class="stat-card"><div class="stat-icon">💼</div><div class="stat-value" id="jobsV">3 jobs</div><div class="stat-label" id="jobsL">Công việc</div></div>
-        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="goalV">97%</div><div class="stat-label" id="goalL">Mục tiêu tháng</div></div>
+        <div class="stat-card" id="goalCard"><div class="stat-icon">🎯</div><div class="stat-value" id="goalV">—</div><div class="stat-label" id="goalL">Mục tiêu tháng</div></div>
       </div>
 
       <div class="section-title" id="recTit">CA LÀM GẦN ĐÂY</div>
@@ -158,11 +158,6 @@
           <div class="settings-info"><div class="settings-name" id="sSupport">Hỗ trợ</div><div class="settings-value" id="sSupportV">Câu hỏi thường gặp</div></div>
           <div class="settings-arrow">›</div>
         </div>
-        <div class="settings-row">
-          <div class="settings-icon">🔔</div>
-          <div class="settings-info"><div class="settings-name" id="sNotif">Thông báo</div><div class="settings-value" id="sNotifV">Bật</div></div>
-          <div class="toggle" onclick="this.classList.toggle('off')"></div>
-        </div>
       </div>
 
       <div class="settings-group">
@@ -197,11 +192,11 @@
   <!-- =========================================================================
        Bottom nav
        ========================================================================= -->
-  <nav class="app-nav">
-    <div class="nav-item active" onclick="goPage('home',this)"     id="nav-home"><div class="nav-icon">🏠</div><div class="nav-label" id="navH">Trang chủ</div></div>
-    <div class="nav-item"        onclick="goPage('add',this)"      id="nav-add"><div class="nav-fab">➕</div><div class="nav-label" id="navA">Thêm ca</div></div>
-    <div class="nav-item"        onclick="goPage('report',this)"   id="nav-report"><div class="nav-icon">📊</div><div class="nav-label" id="navR">Báo cáo</div></div>
-    <div class="nav-item"        onclick="goPage('settings',this)" id="nav-settings"><div class="nav-icon">⚙️</div><div class="nav-label" id="navS">Cài đặt</div></div>
+  <nav class="app-nav" role="tablist">
+    <div class="nav-item active" role="tab" tabindex="0" aria-label="Home" onclick="goPage('home',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('home',this)}" id="nav-home"><div class="nav-icon" aria-hidden="true">🏠</div><div class="nav-label" id="navH">Trang chủ</div></div>
+    <div class="nav-item"        role="tab" tabindex="0" aria-label="Add shift" onclick="goPage('add',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('add',this)}" id="nav-add"><div class="nav-fab" aria-hidden="true">➕</div><div class="nav-label" id="navA">Thêm ca</div></div>
+    <div class="nav-item"        role="tab" tabindex="0" aria-label="Report" onclick="goPage('report',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('report',this)}" id="nav-report"><div class="nav-icon" aria-hidden="true">📊</div><div class="nav-label" id="navR">Báo cáo</div></div>
+    <div class="nav-item"        role="tab" tabindex="0" aria-label="Settings" onclick="goPage('settings',this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPage('settings',this)}" id="nav-settings"><div class="nav-icon" aria-hidden="true">⚙️</div><div class="nav-label" id="navS">Cài đặt</div></div>
   </nav>
 
   <!-- =========================================================================

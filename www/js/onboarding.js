@@ -2,10 +2,22 @@
    Onboarding — first-run profile screen (name + language)
    ========================================================================= */
 
+function detectDefaultLang() {
+  try {
+    const nav = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    const code = String(nav).toLowerCase().split(/[-_]/)[0];
+    if (L[code]) return code;
+  } catch (e) {}
+  return 'ja';
+}
+
 function checkOnboarding() {
   if (profiles.length === 0) {
+    const defaultLang = detectDefaultLang();
     document.getElementById('obScreen').style.display = 'flex';
-    applyObLang('ja');
+    const sel = document.getElementById('ob_lang');
+    if (sel) sel.value = defaultLang;
+    applyObLang(defaultLang);
   }
 }
 
@@ -42,7 +54,7 @@ function resetOnboarding() {
 
 function showOnboardingForNew() {
   document.getElementById('ob_name').value = '';
-  document.getElementById('ob_lang').value = curLang || 'ja';
+  document.getElementById('ob_lang').value = curLang || detectDefaultLang();
   applyObLang(document.getElementById('ob_lang').value);
   document.getElementById('obScreen').style.display = 'flex';
 }

@@ -53,6 +53,7 @@ const L = {
     alwDayShort: 'ng', alwMonShort: 'th',
     otAfterTpl: 'OT sau {h}h × {m}', otTimesTpl: 'OT × {m}',
     noJobsTitle: 'Tạo nơi làm việc đầu tiên', noJobsBody: 'Bạn cần tạo ít nhất một nơi làm việc trước khi thêm ca và theo dõi thu nhập.', noJobsAction: '➕ Tạo nơi làm việc đầu tiên', needJobFirst: 'Hãy tạo nơi làm việc đầu tiên trước khi thêm ca.', jobInUseMsg: 'Không thể xoá công việc đang được dùng trong ca làm hoặc mẫu ca.',
+    undoLbl: 'Hoàn tác', deletedLbl: 'Đã xoá', goalPromptTitle: 'Mục tiêu tháng', goalPromptMsg: 'Nhập mục tiêu thu nhập tháng (0 để xoá):', emptyShiftTitle: 'Chưa có ca nào', emptyShiftBody: 'Chạm ➕ để thêm ca đầu tiên.',
     phJobName: 'VD: Nơi làm của tôi...', phAlwName: 'Tên phụ cấp', phNote: 'VD: Ca sáng, ngày lễ...', phObName: 'Tên của bạn...',
     pdfDate: 'Ngày', pdfJob: 'Công việc', pdfStart: 'Bắt đầu', pdfEnd: 'Kết thúc', pdfHours: 'Số giờ', pdfOT: 'OT', pdfPay: 'Thu nhập', pdfNote: 'Ghi chú', pdfBreak: 'Nghỉ(phút)', pdfTotal: 'TỔNG', pdfGenerated: 'Xuất lúc', pdfCurrency: 'Tiền tệ',
     expShareCSV: 'Lưu báo cáo CSV', expSharePDF: 'Lưu/In báo cáo PDF', expReady: 'sẵn sàng', expDownloaded: 'đã tải', expOpened: 'Đã mở chia sẻ', expFailed: 'Xuất thất bại',
@@ -110,6 +111,7 @@ const L = {
     alwDayShort: 'd', alwMonShort: 'mo',
     otAfterTpl: 'OT after {h}h × {m}', otTimesTpl: 'OT × {m}',
     noJobsTitle: 'Create your first workplace', noJobsBody: 'You need at least one workplace before adding shifts and tracking income.', noJobsAction: '➕ Add first workplace', needJobFirst: 'Create your first workplace before adding shifts.', jobInUseMsg: 'This workplace is still used by shifts or saved templates and cannot be deleted.',
+    undoLbl: 'Undo', deletedLbl: 'Deleted', goalPromptTitle: 'Monthly goal', goalPromptMsg: 'Enter your monthly income goal (0 to clear):', emptyShiftTitle: 'No shifts yet', emptyShiftBody: 'Tap ➕ to add your first shift.',
     phJobName: 'e.g. My workplace...', phAlwName: 'Allowance name', phNote: 'e.g. Morning shift, holiday...', phObName: 'Your name...',
     pdfDate: 'Date', pdfJob: 'Job', pdfStart: 'Start', pdfEnd: 'End', pdfHours: 'Hours', pdfOT: 'OT', pdfPay: 'Pay', pdfNote: 'Note', pdfBreak: 'Break(min)', pdfTotal: 'TOTAL', pdfGenerated: 'Generated', pdfCurrency: 'Currency',
     expShareCSV: 'Save CSV report', expSharePDF: 'Save or print report', expReady: 'ready', expDownloaded: 'downloaded', expOpened: 'Opened share sheet', expFailed: 'Export failed',
@@ -167,6 +169,7 @@ const L = {
     alwDayShort: '日', alwMonShort: '月',
     otAfterTpl: '{h}h超 × {m}', otTimesTpl: '残業 × {m}',
     noJobsTitle: '最初の勤務先を作成', noJobsBody: 'シフト追加と収入管理を始めるには、先に勤務先を1件以上作成してください。', noJobsAction: '➕ 勤務先を追加', needJobFirst: 'シフトを追加する前に勤務先を作成してください。', jobInUseMsg: 'この勤務先はシフトまたはテンプレートで使用中のため削除できません。',
+    undoLbl: '元に戻す', deletedLbl: '削除しました', goalPromptTitle: '月間目標', goalPromptMsg: '月間収入目標を入力してください（0で解除）:', emptyShiftTitle: 'シフトがまだありません', emptyShiftBody: '➕をタップして最初のシフトを追加してください。',
     phJobName: '例：自分の勤務先...', phAlwName: '手当名', phNote: '例：朝シフト、祝日...', phObName: 'お名前...',
     pdfDate: '日付', pdfJob: '勤務先', pdfStart: '開始', pdfEnd: '終了', pdfHours: '時間', pdfOT: '残業', pdfPay: '収入', pdfNote: 'メモ', pdfBreak: '休憩(分)', pdfTotal: '合計', pdfGenerated: '出力日時', pdfCurrency: '通貨',
     expShareCSV: 'CSVレポートを保存', expSharePDF: 'PDFレポート保存/印刷', expReady: '準備完了', expDownloaded: 'ダウンロード済', expOpened: '共有シートを開きました', expFailed: '出力失敗',
@@ -182,6 +185,7 @@ const L = {
 
   zh: {
     f: '🇨🇳', n: '中文', nv: '中文（简体）', appSub: '收入管理', greet: '你好！',
+    undoLbl: '撤销', deletedLbl: '已删除', goalPromptTitle: '月度目标', goalPromptMsg: '输入本月收入目标（输入0清除）：', emptyShiftTitle: '还没有班次', emptyShiftBody: '点击 ➕ 添加你的第一个班次。',
     navH: '首页', navA: '添加工作', navR: '报告', navS: '设置',
     todayLbl: '今日收入', wkLbl: '本周', moLbl: '本月', yrLbl: '今年',
     statTit: '快速统计', hrsL: '本月工时', otL: '加班', jobsL: '工作', goalL: '月度目标',
@@ -238,6 +242,7 @@ const L = {
 
   th: {
     f: '🇹🇭', n: 'ภาษาไทย', nv: 'ภาษาไทย', appSub: 'จัดการรายได้', greet: 'สวัสดี!',
+    undoLbl: 'เลิกทำ', deletedLbl: 'ลบแล้ว', goalPromptTitle: 'เป้าหมายเดือน', goalPromptMsg: 'ใส่เป้าหมายรายได้ของเดือน (0 เพื่อล้าง):', emptyShiftTitle: 'ยังไม่มีกะ', emptyShiftBody: 'แตะ ➕ เพื่อเพิ่มกะแรกของคุณ',
     navH: 'หน้าหลัก', navA: 'เพิ่มงาน', navR: 'รายงาน', navS: 'ตั้งค่า',
     todayLbl: 'รายได้วันนี้', wkLbl: 'สัปดาห์นี้', moLbl: 'เดือนนี้', yrLbl: 'ปีนี้',
     statTit: 'สถิติ', hrsL: 'ชั่วโมงเดือนนี้', otL: 'OT', jobsL: 'งาน', goalL: 'เป้าหมาย',
@@ -294,6 +299,7 @@ const L = {
 
   pt: {
     f: '🇧🇷', n: 'Português', nv: 'Português (Brasil)', appSub: 'Gestão de Renda', greet: 'Olá!',
+    undoLbl: 'Desfazer', deletedLbl: 'Excluído', goalPromptTitle: 'Meta mensal', goalPromptMsg: 'Informe sua meta de renda mensal (0 para limpar):', emptyShiftTitle: 'Sem turnos ainda', emptyShiftBody: 'Toque em ➕ para adicionar seu primeiro turno.',
     navH: 'Início', navA: 'Adicionar Trabalho', navR: 'Relatório', navS: 'Config',
     todayLbl: 'Renda Hoje', wkLbl: 'Esta Semana', moLbl: 'Este Mês', yrLbl: 'Este Ano',
     statTit: 'ESTATÍSTICAS', hrsL: 'Horas este mês', otL: 'Horas extras', jobsL: 'Empregos', goalL: 'Meta mensal',
@@ -350,6 +356,7 @@ const L = {
 
   ru: {
     f: '🇷🇺', n: 'Русский', nv: 'Русский', appSub: 'Учёт доходов', greet: 'Привет!',
+    undoLbl: 'Отмена', deletedLbl: 'Удалено', goalPromptTitle: 'Цель месяца', goalPromptMsg: 'Введите цель дохода за месяц (0 чтобы сбросить):', emptyShiftTitle: 'Смен пока нет', emptyShiftBody: 'Нажмите ➕, чтобы добавить первую смену.',
     navH: 'Главная', navA: 'Добавить работу', navR: 'Отчёт', navS: 'Настройки',
     todayLbl: 'Доход сегодня', wkLbl: 'Эта неделя', moLbl: 'Этот месяц', yrLbl: 'Этот год',
     statTit: 'СТАТИСТИКА', hrsL: 'Часов в месяце', otL: 'Сверхурочные', jobsL: 'Работы', goalL: 'Цель месяца',
@@ -406,6 +413,7 @@ const L = {
 
   ko: {
     f: '🇰🇷', n: '한국어', nv: '한국어', appSub: '수입 관리', greet: '안녕하세요!',
+    undoLbl: '실행 취소', deletedLbl: '삭제됨', goalPromptTitle: '월 목표', goalPromptMsg: '월 수입 목표를 입력하세요(0 입력 시 해제):', emptyShiftTitle: '아직 근무 기록이 없어요', emptyShiftBody: '➕ 를 눌러 첫 근무를 추가하세요.',
     navH: '홈', navA: '작업 추가', navR: '보고서', navS: '설정',
     todayLbl: '오늘 수입', wkLbl: '이번 주', moLbl: '이번 달', yrLbl: '올해',
     statTit: '빠른 통계', hrsL: '이번 달 근무시간', otL: '초과근무', jobsL: '직장', goalL: '월 목표',
@@ -462,6 +470,7 @@ const L = {
 
   hi: {
     f: '🇮🇳', n: 'हिन्दी', nv: 'हिन्दी', appSub: 'आय प्रबंधन', greet: 'नमस्ते!',
+    undoLbl: 'पूर्ववत करें', deletedLbl: 'हटा दिया गया', goalPromptTitle: 'मासिक लक्ष्य', goalPromptMsg: 'मासिक आय लक्ष्य दर्ज करें (0 हटाने के लिए):', emptyShiftTitle: 'अभी कोई शिफ्ट नहीं', emptyShiftBody: 'पहली शिफ्ट जोड़ने के लिए ➕ दबाएँ।',
     navH: 'होम', navA: 'काम जोड़ें', navR: 'रिपोर्ट', navS: 'सेटिंग',
     todayLbl: 'आज की आय', wkLbl: 'इस हफ्ते', moLbl: 'इस महीने', yrLbl: 'इस साल',
     statTit: 'आँकड़े', hrsL: 'घंटे इस महीने', otL: 'ओवरटाइम', jobsL: 'नौकरियां', goalL: 'मासिक लक्ष्य',
