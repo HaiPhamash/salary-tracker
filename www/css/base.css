@@ -19,24 +19,8 @@
 
   --header-pad-top:  max(12px, env(safe-area-inset-top));
   --nav-pad-bottom:  max(12px, env(safe-area-inset-bottom));
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary:      #3b5fa8;
-    --primary-lite: #5479c9;
-    --accent:       #f5a623;
-    --bg:           #0f1320;
-    --card:         #1b2034;
-    --card-alt:     #232844;
-    --text:         #e8ecf7;
-    --text-muted:   #9aa3c0;
-    --green:        #34d06a;
-    --red:          #ff5b5b;
-    --border:       #2b3150;
-    --ot:           #ff9a3c;
-    --shadow:       rgba(0, 0, 0, .35);
-  }
+  color-scheme: light;
 }
 
 * {
