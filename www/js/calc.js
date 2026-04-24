@@ -3,8 +3,9 @@
    ========================================================================= */
 
 function calcShiftPay(shift, job) {
+  // Monthly allowances (a.per === 'month') are NOT included in per-shift pay.
+  // They are aggregated independently by period in getMonthlyAllowanceForRange().
   const dayAlw = job.allowances.filter(a => a.per === 'day').reduce((s, a) => s + a.amount, 0);
-  const monAlw = job.allowances.filter(a => a.per === 'month').reduce((s, a) => s + a.amount, 0);
 
   if (job.type === 'hourly') {
     const { reg, ot, base } = calcHourly(shift.hours, job.rate, job.otThreshold, job.otMultiplier);
@@ -37,12 +38,10 @@ function calcShiftPay(shift, job) {
     if (job.otType === 'multiplier') base = Math.round(dayVal * job.otMultiplier);
     else { base = dayVal; otExtra = shift.manualOT || 0; }
   }
-  const monAlwDaily = Math.round(monAlw / job.workDays);
-  const total = Math.round(base + dayAlw + monAlwDaily + otExtra);
+  const total = Math.round(base + dayAlw + otExtra);
   return {
     base,
     dayAlwAmt: dayAlw,
-    monAlwDaily,
     otExtra,
     total,
     isOT: shift.isOT,

@@ -64,7 +64,22 @@ const L = {
     cal_swipeDel: 'Xoá', cal_panelTit: 'Ca ngày {d}',
     dpTit: 'Chọn ngày', dpToday: 'Hôm nay', dpCancel: 'Huỷ',
     months: ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'],
-    days: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+    days: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+    monAlwHint: 'Phụ cấp theo tháng {amt} được cộng riêng trong báo cáo theo kỳ',
+    bdTitleMonth: 'CHI TIẾT THÁNG NÀY', bdTitlePeriod: 'CHI TIẾT KỲ BÁO CÁO',
+    bdGross: 'Lương ca làm', bdAlwMonth: 'Phụ cấp theo tháng', bdTotal: 'Tổng thu nhập',
+    bdDed: 'Khấu trừ', bdNet: 'Thực nhận',
+    sdivDed: 'KHẤU TRỪ', noDeds: 'Chưa có khoản khấu trừ',
+    phDedName: 'Tên khoản (VD: Tiền nhà, Nenkin, Thuế)',
+    opt_dedvt_fixed: '¥ cố định', opt_dedvt_percent: '% trên thu nhập',
+    opt_year: '/ năm',
+    lbl_dedValid: 'Giới hạn thời gian áp dụng',
+    lbl_dedFrom: 'Từ ngày', lbl_dedTo: 'Đến ngày',
+    btn_addDed: '＋ Thêm khấu trừ',
+    alwYearShort: 'năm',
+    dedInvalid: 'Nhập tên và số tiền hợp lệ',
+    dedPercentRange: 'Phần trăm phải từ 0 đến 100',
+    dedDateRange: 'Khoảng thời gian không hợp lệ'
   },
 
   en: {
@@ -122,7 +137,22 @@ const L = {
     cal_swipeDel: 'Delete', cal_panelTit: 'Shifts on {d}',
     dpTit: 'Select date', dpToday: 'Today', dpCancel: 'Cancel',
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    monAlwHint: 'Monthly allowance {amt} is added separately in period reports',
+    bdTitleMonth: 'THIS MONTH BREAKDOWN', bdTitlePeriod: 'PERIOD BREAKDOWN',
+    bdGross: 'Shift income', bdAlwMonth: 'Monthly allowance', bdTotal: 'Total income',
+    bdDed: 'Deductions', bdNet: 'Net income',
+    sdivDed: 'DEDUCTIONS', noDeds: 'No deductions',
+    phDedName: 'Name (e.g. Rent, Pension, Tax)',
+    opt_dedvt_fixed: 'Fixed amount', opt_dedvt_percent: '% of gross',
+    opt_year: '/ year',
+    lbl_dedValid: 'Limit validity period',
+    lbl_dedFrom: 'From', lbl_dedTo: 'To',
+    btn_addDed: '＋ Add deduction',
+    alwYearShort: 'yr',
+    dedInvalid: 'Enter a name and a positive amount',
+    dedPercentRange: 'Percent must be between 0 and 100',
+    dedDateRange: 'Invalid validity range'
   },
 
   ja: {
@@ -180,7 +210,22 @@ const L = {
     cal_swipeDel: '削除', cal_panelTit: '{d}のシフト',
     dpTit: '日付を選択', dpToday: '今日', dpCancel: 'キャンセル',
     months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-    days: ['日', '月', '火', '水', '木', '金', '土']
+    days: ['日', '月', '火', '水', '木', '金', '土'],
+    monAlwHint: '月額手当 {amt} は期間レポートで別途加算されます',
+    bdTitleMonth: '今月の内訳', bdTitlePeriod: '期間内訳',
+    bdGross: 'シフト収入', bdAlwMonth: '月額手当', bdTotal: '合計収入',
+    bdDed: '控除', bdNet: '手取り',
+    sdivDed: '控除', noDeds: '控除なし',
+    phDedName: '名称（例：家賃、年金、税金）',
+    opt_dedvt_fixed: '固定額 ¥', opt_dedvt_percent: '総収入の%',
+    opt_year: '／年',
+    lbl_dedValid: '適用期間を制限',
+    lbl_dedFrom: '開始日', lbl_dedTo: '終了日',
+    btn_addDed: '＋ 控除を追加',
+    alwYearShort: '年',
+    dedInvalid: '名称と金額を入力してください',
+    dedPercentRange: 'パーセントは0〜100で入力してください',
+    dedDateRange: '有効期間が正しくありません'
   },
 
   zh: {
@@ -237,7 +282,22 @@ const L = {
     cal_swipeDel: '删除', cal_panelTit: '{d} 的班次',
     dpTit: '选择日期', dpToday: '今天', dpCancel: '取消',
     months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-    days: ['日', '一', '二', '三', '四', '五', '六']
+    days: ['日', '一', '二', '三', '四', '五', '六'],
+    monAlwHint: '月度补贴 {amt} 将在周期报告中单独计入',
+    bdTitleMonth: '本月明细', bdTitlePeriod: '周期明细',
+    bdGross: '班次收入', bdAlwMonth: '月度补贴', bdTotal: '总收入',
+    bdDed: '扣除', bdNet: '实得',
+    sdivDed: '扣除项', noDeds: '暂无扣除',
+    phDedName: '名称（如：房租、养老金、税）',
+    opt_dedvt_fixed: '固定金额', opt_dedvt_percent: '按收入的%',
+    opt_year: '/年',
+    lbl_dedValid: '限制有效期',
+    lbl_dedFrom: '从', lbl_dedTo: '到',
+    btn_addDed: '＋ 添加扣除',
+    alwYearShort: '年',
+    dedInvalid: '请输入名称和有效金额',
+    dedPercentRange: '百分比须在0-100之间',
+    dedDateRange: '有效期不正确'
   },
 
   th: {
@@ -294,7 +354,22 @@ const L = {
     cal_swipeDel: 'ลบ', cal_panelTit: 'กะของ {d}',
     dpTit: 'เลือกวันที่', dpToday: 'วันนี้', dpCancel: 'ยกเลิก',
     months: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'],
-    days: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
+    days: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+    monAlwHint: 'เบี้ยเลี้ยงรายเดือน {amt} จะถูกคำนวณแยกในรายงานตามช่วงเวลา',
+    bdTitleMonth: 'รายละเอียดเดือนนี้', bdTitlePeriod: 'รายละเอียดช่วง',
+    bdGross: 'รายได้จากกะ', bdAlwMonth: 'เบี้ยเลี้ยงรายเดือน', bdTotal: 'รวมรายได้',
+    bdDed: 'หักค่าใช้จ่าย', bdNet: 'รายได้สุทธิ',
+    sdivDed: 'รายการหัก', noDeds: 'ยังไม่มีรายการหัก',
+    phDedName: 'ชื่อ (เช่น ค่าเช่า, บำนาญ, ภาษี)',
+    opt_dedvt_fixed: 'จำนวนคงที่', opt_dedvt_percent: '% ของรายได้',
+    opt_year: '/ ปี',
+    lbl_dedValid: 'จำกัดช่วงเวลาที่ใช้',
+    lbl_dedFrom: 'ตั้งแต่', lbl_dedTo: 'ถึง',
+    btn_addDed: '＋ เพิ่มรายการหัก',
+    alwYearShort: 'ปี',
+    dedInvalid: 'กรอกชื่อและจำนวนที่ถูกต้อง',
+    dedPercentRange: 'เปอร์เซ็นต์ต้องอยู่ระหว่าง 0-100',
+    dedDateRange: 'ช่วงเวลาไม่ถูกต้อง'
   },
 
   pt: {
@@ -351,7 +426,22 @@ const L = {
     cal_swipeDel: 'Excluir', cal_panelTit: 'Turnos em {d}',
     dpTit: 'Selecionar data', dpToday: 'Hoje', dpCancel: 'Cancelar',
     months: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
-    days: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    days: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+    monAlwHint: 'Benefício mensal {amt} é somado separadamente nos relatórios por período',
+    bdTitleMonth: 'DETALHES DESTE MÊS', bdTitlePeriod: 'DETALHES DO PERÍODO',
+    bdGross: 'Renda de turnos', bdAlwMonth: 'Benefício mensal', bdTotal: 'Renda total',
+    bdDed: 'Deduções', bdNet: 'Renda líquida',
+    sdivDed: 'DEDUÇÕES', noDeds: 'Sem deduções',
+    phDedName: 'Nome (ex.: Aluguel, Previdência, Imposto)',
+    opt_dedvt_fixed: 'Valor fixo', opt_dedvt_percent: '% da renda',
+    opt_year: '/ ano',
+    lbl_dedValid: 'Limitar período de validade',
+    lbl_dedFrom: 'De', lbl_dedTo: 'Até',
+    btn_addDed: '＋ Adicionar dedução',
+    alwYearShort: 'ano',
+    dedInvalid: 'Informe nome e valor positivo',
+    dedPercentRange: 'Percentual deve estar entre 0 e 100',
+    dedDateRange: 'Período inválido'
   },
 
   ru: {
@@ -408,7 +498,22 @@ const L = {
     cal_swipeDel: 'Удалить', cal_panelTit: 'Смены {d}',
     dpTit: 'Выбрать дату', dpToday: 'Сегодня', dpCancel: 'Отмена',
     months: ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],
-    days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+    days: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+    monAlwHint: 'Ежемесячная надбавка {amt} учитывается отдельно в отчётах за период',
+    bdTitleMonth: 'ДЕТАЛИ ЗА МЕСЯЦ', bdTitlePeriod: 'ДЕТАЛИ ПЕРИОДА',
+    bdGross: 'Доход со смен', bdAlwMonth: 'Ежемесячная надбавка', bdTotal: 'Общий доход',
+    bdDed: 'Удержания', bdNet: 'Чистый доход',
+    sdivDed: 'УДЕРЖАНИЯ', noDeds: 'Нет удержаний',
+    phDedName: 'Название (аренда, пенсия, налог)',
+    opt_dedvt_fixed: 'Фиксированная сумма', opt_dedvt_percent: '% от дохода',
+    opt_year: '/ год',
+    lbl_dedValid: 'Ограничить период действия',
+    lbl_dedFrom: 'С', lbl_dedTo: 'По',
+    btn_addDed: '＋ Добавить удержание',
+    alwYearShort: 'г',
+    dedInvalid: 'Введите название и сумму',
+    dedPercentRange: 'Процент должен быть от 0 до 100',
+    dedDateRange: 'Неверный период'
   },
 
   ko: {
@@ -465,7 +570,22 @@ const L = {
     cal_swipeDel: '삭제', cal_panelTit: '{d} 시프트',
     dpTit: '날짜 선택', dpToday: '오늘', dpCancel: '취소',
     months: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-    days: ['일', '월', '화', '수', '목', '금', '토']
+    days: ['일', '월', '화', '수', '목', '금', '토'],
+    monAlwHint: '월별 수당 {amt}은 기간 보고서에 별도로 합산됩니다',
+    bdTitleMonth: '이번 달 상세', bdTitlePeriod: '기간 상세',
+    bdGross: '시프트 수입', bdAlwMonth: '월별 수당', bdTotal: '총 수입',
+    bdDed: '공제', bdNet: '실수령액',
+    sdivDed: '공제', noDeds: '공제 항목 없음',
+    phDedName: '이름 (예: 집세, 연금, 세금)',
+    opt_dedvt_fixed: '고정 금액', opt_dedvt_percent: '소득의 %',
+    opt_year: '/ 년',
+    lbl_dedValid: '유효 기간 제한',
+    lbl_dedFrom: '시작일', lbl_dedTo: '종료일',
+    btn_addDed: '＋ 공제 추가',
+    alwYearShort: '년',
+    dedInvalid: '이름과 금액을 입력하세요',
+    dedPercentRange: '퍼센트는 0-100 사이여야 합니다',
+    dedDateRange: '유효 기간이 올바르지 않습니다'
   },
 
   hi: {
@@ -522,6 +642,21 @@ const L = {
     cal_swipeDel: 'हटाएं', cal_panelTit: '{d} की शिफ्ट',
     dpTit: 'तारीख चुनें', dpToday: 'आज', dpCancel: 'रद्द करें',
     months: ['जन','फर','मार्च','अप्रै','मई','जून','जुल','अग','सित','अक्टू','नव','दिस'],
-    days: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि']
+    days: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'],
+    monAlwHint: 'मासिक भत्ता {amt} अवधि रिपोर्ट में अलग से जोड़ा जाता है',
+    bdTitleMonth: 'इस माह का विवरण', bdTitlePeriod: 'अवधि विवरण',
+    bdGross: 'शिफ्ट आय', bdAlwMonth: 'मासिक भत्ता', bdTotal: 'कुल आय',
+    bdDed: 'कटौती', bdNet: 'शुद्ध आय',
+    sdivDed: 'कटौतियां', noDeds: 'कोई कटौती नहीं',
+    phDedName: 'नाम (जैसे किराया, पेंशन, कर)',
+    opt_dedvt_fixed: 'निश्चित राशि', opt_dedvt_percent: 'आय का %',
+    opt_year: '/ वर्ष',
+    lbl_dedValid: 'वैधता अवधि सीमित करें',
+    lbl_dedFrom: 'से', lbl_dedTo: 'तक',
+    btn_addDed: '＋ कटौती जोड़ें',
+    alwYearShort: 'वर्ष',
+    dedInvalid: 'नाम और वैध राशि दर्ज करें',
+    dedPercentRange: 'प्रतिशत 0 से 100 के बीच होना चाहिए',
+    dedDateRange: 'अवधि सही नहीं है'
   }
 };

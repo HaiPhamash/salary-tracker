@@ -89,12 +89,24 @@ function applyLang() {
   set('lbl_jn', t.lbl_jn); set('sdivType', t.sdivType); set('sdivOT', t.sdivOT);
   set('lbl_otth', t.lbl_otth); set('lbl_otmul', t.lbl_otmul); set('lbl_ottype', t.lbl_ottype);
   set('opt_mul', t.opt_mul); set('opt_man', t.opt_man);
-  set('sdivAlw', t.sdivAlw); set('opt_day', t.opt_day); set('opt_month', t.opt_month);
+  set('sdivAlw', t.sdivAlw); set('opt_day', t.opt_day); set('opt_month', t.opt_month); set('opt_year', t.opt_year);
   set('sdivIcon', t.sdivIcon); set('btnSaveJob', t.btnSaveJob);
   set('lbl_wdays', t.lbl_wdays);
 
+  set('sdivDed', t.sdivDed || 'DEDUCTIONS');
+  set('opt_dedvt_fixed',   t.opt_dedvt_fixed   || 'Fixed amount');
+  set('opt_dedvt_percent', t.opt_dedvt_percent || '% of gross');
+  set('opt_dedp_day',   t.opt_day   || '/day');
+  set('opt_dedp_month', t.opt_month || '/month');
+  set('opt_dedp_year',  t.opt_year  || '/year');
+  set('lbl_dedValid', t.lbl_dedValid || 'Limit validity period');
+  set('lbl_dedFrom',  t.lbl_dedFrom  || 'From');
+  set('lbl_dedTo',    t.lbl_dedTo    || 'To');
+  set('btn_addDed',   t.btn_addDed   || '+ Add deduction');
+
   setPH('inp_jn',   t.phJobName);
   setPH('inp_alwn', t.phAlwName);
+  setPH('inp_dedn', t.phDedName);
   setPH('inp_note', t.phNote);
   setPH('ob_name',  t.phObName);
 
@@ -504,11 +516,41 @@ function downloadBlob(fileName, content, mimeType) {
 async function exportCSV() {
   const sym  = getCurSym();
   const t    = L[curLang];
+  const sorted = shifts.slice().sort((a, b) => b.date.localeCompare(a.date));
   const rows = [[t.pdfDate, t.pdfJob, t.pdfStart, t.pdfEnd, t.pdfBreak, t.pdfHours, t.pdfOT + ' ' + t.pdfHours, t.pdfPay + '(' + sym + ')', t.pdfNote]];
-  shifts.slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(s => {
+  sorted.forEach(s => {
     const job = getShiftJobMeta(s);
     rows.push([s.date, job.name, s.start || '', s.end || '', s.breakMin || 0, s.hours || 0, s.otH || 0, getShiftPay(s), s.note || '']);
   });
+
+  const gross = sorted.reduce((a, s) => a + getShiftPay(s), 0);
+  const dates = sorted.map(s => s.date).sort();
+  const fromYmd = dates[0] || localYmd();
+  const toYmd   = dates[dates.length - 1] || localYmd();
+  const alwTotal = getMonthlyAllowanceForRange(fromYmd, toYmd, null);
+  const dedTotal = getDeductionsForRange(fromYmd, toYmd, null);
+  const net = gross + alwTotal - dedTotal;
+
+  rows.push([]);
+  rows.push([(t.bdTitlePeriod || 'Period breakdown') + ' ' + fromYmd + ' -> ' + toYmd]);
+  rows.push([t.bdGross || 'Shift income', '', '', '', '', '', '', gross, '']);
+
+  getMonthlyAllowanceBreakdown(fromYmd, toYmd, null).forEach(b => {
+    b.items.forEach(i => {
+      rows.push([t.bdAlwMonth || 'Monthly allowance', b.jobName, i.name, '', '', '', '', i.amount, '']);
+    });
+  });
+  if (alwTotal > 0) rows.push([t.bdAlwMonth || 'Monthly allowance', '', '', '', '', '', t.pdfTotal || 'Total', alwTotal, '']);
+
+  getDeductionsBreakdown(fromYmd, toYmd, null).forEach(b => {
+    b.items.forEach(i => {
+      const lbl = i.name + (i.valueType === 'percent' ? ' (' + i.rawAmount + '%)' : '');
+      rows.push([t.bdDed || 'Deductions', b.jobName, lbl, '', '', '', '', -i.amount, '']);
+    });
+  });
+  if (dedTotal > 0) rows.push([t.bdDed || 'Deductions', '', '', '', '', '', t.pdfTotal || 'Total', -dedTotal, '']);
+
+  rows.push([t.bdNet || t.bdTotal || 'Net', '', '', '', '', '', '', net, '']);
   const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
   const fileName = 'salary-tracker-' + localYmd() + '.csv';
 
@@ -529,7 +571,18 @@ async function exportPDF() {
   const sym = getCurSym();
   const t   = L[curLang];
   const sortedShifts = shifts.slice().sort((a, b) => b.date.localeCompare(a.date));
-  const total = sortedShifts.reduce((s, sh) => s + getShiftPay(sh), 0);
+  const gross = sortedShifts.reduce((s, sh) => s + getShiftPay(sh), 0);
+
+  const dates = sortedShifts.map(s => s.date).sort();
+  const fromYmd = dates[0] || localYmd();
+  const toYmd   = dates[dates.length - 1] || localYmd();
+  const alwTotal = getMonthlyAllowanceForRange(fromYmd, toYmd, null);
+  const dedTotal = getDeductionsForRange(fromYmd, toYmd, null);
+  const net = gross + alwTotal - dedTotal;
+
+  const alwBreakdown = getMonthlyAllowanceBreakdown(fromYmd, toYmd, null);
+  const dedBreakdown = getDeductionsBreakdown(fromYmd, toYmd, null);
+
   const rows  = sortedShifts.map(s => {
     const job = getShiftJobMeta(s);
     return `<tr>
@@ -544,18 +597,74 @@ async function exportPDF() {
     </tr>`;
   }).join('');
 
+  const alwDetail = alwBreakdown.map(b => `
+    <tr>
+      <td>${esc(b.jobIcon || '')} ${esc(b.jobName || '')}</td>
+      <td>${b.items.map(i => esc(i.name)).join(', ')}</td>
+      <td style="text-align:right;color:#16a34a;font-weight:600;">+${sym}${fmtNumber(b.total)}</td>
+    </tr>`).join('');
+
+  const dedDetail = dedBreakdown.map(b => `
+    <tr>
+      <td>${esc(b.jobIcon || '')} ${esc(b.jobName || '')}</td>
+      <td>${b.items.map(i => esc(i.name) + (i.valueType === 'percent' ? ' (' + i.rawAmount + '%)' : '')).join(', ')}</td>
+      <td style="text-align:right;color:#ef4444;font-weight:600;">−${sym}${fmtNumber(b.total)}</td>
+    </tr>`).join('');
+
+  const bdGrossLbl = t.bdGross || 'Shift income';
+  const bdAlwLbl   = t.bdAlwMonth || 'Monthly allowance';
+  const bdDedLbl   = t.bdDed || 'Deductions';
+  const bdNetLbl   = t.bdNet || t.bdTotal || 'Net';
+
+  const summarySection = `
+    <div style="margin-bottom:18px;padding:14px 16px;background:#f0f4ff;border-radius:10px;font-size:14px;">
+      <div style="font-size:11px;color:#6b7280;letter-spacing:.5px;margin-bottom:8px;">${esc((t.bdTitlePeriod || 'Period breakdown').toUpperCase())} — ${esc(fromYmd)} → ${esc(toYmd)}</div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>${esc(bdGrossLbl)}</span><span style="font-weight:600;">${sym}${fmtNumber(gross)}</span></div>
+      ${alwTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#16a34a;"><span>${esc(bdAlwLbl)}</span><span style="font-weight:600;">+${sym}${fmtNumber(alwTotal)}</span></div>` : ''}
+      ${dedTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#ef4444;"><span>${esc(bdDedLbl)}</span><span style="font-weight:600;">−${sym}${fmtNumber(dedTotal)}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px dashed #d1d5db;margin-top:6px;font-size:15px;font-weight:700;color:#1a2f5e;"><span>${esc(bdNetLbl)}</span><span>${sym}${fmtNumber(net)}</span></div>
+    </div>`;
+
+  const detailTables = (alwDetail || dedDetail) ? `
+    ${alwDetail ? `
+      <h3 style="color:#16a34a;font-size:14px;margin:16px 0 6px;">${esc(bdAlwLbl)}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;">
+        <thead><tr style="background:#e8f5ee;color:#166534;">
+          <th style="padding:6px 8px;text-align:left;">${esc(t.pdfJob)}</th>
+          <th style="padding:6px 8px;text-align:left;">${esc(t.pdfItems || 'Items')}</th>
+          <th style="padding:6px 8px;text-align:right;">${esc(t.pdfAmount || 'Amount')}</th>
+        </tr></thead>
+        <tbody>${alwDetail}</tbody>
+      </table>` : ''}
+    ${dedDetail ? `
+      <h3 style="color:#ef4444;font-size:14px;margin:16px 0 6px;">${esc(bdDedLbl)}</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;">
+        <thead><tr style="background:#fee2e2;color:#991b1b;">
+          <th style="padding:6px 8px;text-align:left;">${esc(t.pdfJob)}</th>
+          <th style="padding:6px 8px;text-align:left;">${esc(t.pdfItems || 'Items')}</th>
+          <th style="padding:6px 8px;text-align:right;">${esc(t.pdfAmount || 'Amount')}</th>
+        </tr></thead>
+        <tbody>${dedDetail}</tbody>
+      </table>` : ''}
+  ` : '';
+
   const reportBody = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:900px;margin:0 auto;">
       <h2 style="color:#1a2f5e;margin-bottom:4px;">💴 Salary Tracker — ${esc(userName || '')}</h2>
       <p style="color:#666;font-size:13px;margin-bottom:16px;">${t.pdfGenerated}: ${formatYmdWithDow(localYmd())} ${pad2(new Date().getHours())}:${pad2(new Date().getMinutes())} | ${t.pdfCurrency}: ${getCurLabel()}</p>
+
+      ${summarySection}
+      ${detailTables}
+
+      <h3 style="color:#1a2f5e;font-size:14px;margin:16px 0 6px;">${esc(t.pdfShiftsTit || 'Shifts')}</h3>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="background:#1a2f5e;color:#fff;">
           <th style="padding:8px;text-align:left;">${t.pdfDate}</th><th>${t.pdfJob}</th><th>${t.pdfStart}</th><th>${t.pdfEnd}</th><th>${t.pdfHours}</th><th>${t.pdfOT}</th><th style="text-align:right;">${t.pdfPay}</th><th>${t.pdfNote}</th>
         </tr></thead>
         <tbody>${rows}</tbody>
         <tfoot><tr style="background:#f0f4ff;font-weight:700;font-size:14px;">
-          <td colspan="6" style="padding:10px;">${t.pdfTotal}</td>
-          <td style="text-align:right;color:#1a2f5e;">${sym}${fmtNumber(total)}</td>
+          <td colspan="6" style="padding:10px;">${t.pdfTotal} (${esc(bdGrossLbl)})</td>
+          <td style="text-align:right;color:#1a2f5e;">${sym}${fmtNumber(gross)}</td>
           <td></td>
         </tr></tfoot>
       </table>
@@ -594,9 +703,11 @@ function openAddJob() {
   document.getElementById('inp_ottype').value = 'multiplier';
   document.getElementById('inp_wdays').value = '22';
   editAlws    = [];
+  editDeds    = [];
   curJobType  = 'hourly';
   pickedIcon  = '🍜';
   pickedColor = '#1a2f5e';
+  resetDedInputs();
   refreshJobModal();
   document.getElementById('moJob').classList.add('show');
 }
@@ -613,12 +724,25 @@ function openEditJob(id) {
   document.getElementById('inp_otmul').value = j.otMultiplier;
   document.getElementById('inp_ottype').value = j.otType || 'multiplier';
   document.getElementById('inp_wdays').value = j.workDays || 22;
-  editAlws    = j.allowances.map(a => ({ ...a }));
+  editAlws    = (j.allowances || []).map(a => ({ ...a }));
+  editDeds    = (j.deductions || []).map(d => ({ ...d }));
   curJobType  = j.type;
   pickedIcon  = j.icon;
   pickedColor = j.color;
+  resetDedInputs();
   refreshJobModal();
   document.getElementById('moJob').classList.add('show');
+}
+
+function resetDedInputs() {
+  const dn = document.getElementById('inp_dedn'); if (dn) dn.value = '';
+  const da = document.getElementById('inp_deda'); if (da) da.value = '';
+  const dvt = document.getElementById('inp_dedvt'); if (dvt) dvt.value = 'fixed';
+  const dp  = document.getElementById('inp_dedp');  if (dp)  dp.value  = 'month';
+  const cv  = document.getElementById('chk_dedValid'); if (cv) cv.checked = false;
+  const df  = document.getElementById('inp_dedFrom'); if (df) df.value = '';
+  const dt  = document.getElementById('inp_dedTo');   if (dt) dt.value = '';
+  const wrap = document.getElementById('dedDatesWrap'); if (wrap) wrap.style.display = 'none';
 }
 
 function closeJob() {
@@ -640,6 +764,7 @@ function refreshJobModal() {
   refreshJobTypeFields();
   updateRateLabel();
   renderAlwList();
+  renderDedList();
   document.querySelectorAll('#iconPicker span').forEach(s =>
     s.style.background = s.dataset.icon === pickedIcon ? '#eff2ff' : ''
   );
@@ -671,13 +796,16 @@ function renderAlwList() {
     return;
   }
 
-  el.innerHTML = editAlws.map((a, i) => `
+  el.innerHTML = editAlws.map((a, i) => {
+    const perKey = a.per === 'day' ? 'opt_day' : a.per === 'year' ? 'opt_year' : 'opt_month';
+    return `
     <div class="allowance-item">
       <div class="allowance-info">${esc(a.name)} — ${getCurSym()}${fmtNumber(a.amount)}
-        <span>${t[a.per === 'day' ? 'opt_day' : 'opt_month']}</span>
+        <span>${t[perKey] || a.per}</span>
       </div>
       <button class="allowance-del" onclick="removeAlw(${i})">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function addAlw() {
@@ -694,6 +822,82 @@ function addAlw() {
 function removeAlw(i) {
   editAlws.splice(i, 1);
   renderAlwList();
+}
+
+function toggleDedValidity(chk) {
+  const wrap = document.getElementById('dedDatesWrap');
+  if (wrap) wrap.style.display = chk && chk.checked ? 'flex' : 'none';
+}
+
+function renderDedList() {
+  const t  = L[curLang] || {};
+  const el = document.getElementById('dedList');
+  if (!el) return;
+
+  if (!editDeds.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0;">' + (t.noDeds || 'No deductions') + '</div>';
+    return;
+  }
+
+  const sym = getCurSym();
+  el.innerHTML = editDeds.map((d, i) => {
+    const amtStr = d.valueType === 'percent' ? (d.amount + '%') : (sym + fmtNumber(d.amount));
+    const perLbl = d.per === 'day'
+      ? (t.opt_day   || '/day')
+      : d.per === 'year'
+        ? (t.opt_year  || '/year')
+        : (t.opt_month || '/month');
+    const range = (d.startDate || d.endDate)
+      ? `<span class="d-meta">${esc((d.startDate || '') + ' → ' + (d.endDate || '∞'))}</span>`
+      : '';
+    return `
+    <div class="deduction-item">
+      <div class="deduction-info">
+        <span class="d-name">${esc(d.name || '')}</span> — ${esc(amtStr)} ${esc(perLbl)}
+        ${range}
+      </div>
+      <button class="deduction-del" onclick="removeDed(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addDed() {
+  const t = L[curLang] || {};
+  const name = (document.getElementById('inp_dedn').value || '').trim();
+  const amt  = parseFloat(document.getElementById('inp_deda').value);
+  const vt   = document.getElementById('inp_dedvt').value || 'fixed';
+  const per  = document.getElementById('inp_dedp').value  || 'month';
+  const validityChk = document.getElementById('chk_dedValid');
+  const useRange = !!(validityChk && validityChk.checked);
+  const startDate = useRange ? document.getElementById('inp_dedFrom').value || '' : '';
+  const endDate   = useRange ? document.getElementById('inp_dedTo').value   || '' : '';
+
+  if (!name || !Number.isFinite(amt) || amt <= 0) {
+    toast(t.dedInvalid || 'Enter a name and a positive amount');
+    return;
+  }
+  if (vt === 'percent' && amt > 100) {
+    toast(t.dedPercentRange || 'Percent must be between 0 and 100');
+    return;
+  }
+  if (startDate && endDate && startDate > endDate) {
+    toast(t.dedDateRange || 'Invalid validity range');
+    return;
+  }
+
+  editDeds.push({
+    name, amount: amt, valueType: vt, per,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined
+  });
+  resetDedInputs();
+  renderDedList();
+  hapticLight();
+}
+
+function removeDed(i) {
+  editDeds.splice(i, 1);
+  renderDedList();
 }
 
 function selIcon(el) {
@@ -723,14 +927,23 @@ function saveJob() {
     otThreshold: otTh, otMultiplier: otMul, otType,
     workDays: wDays,
     allowances: editAlws.map(a => ({ ...a })),
+    deductions: editDeds.map(d => ({ ...d })),
     icon: pickedIcon, color: pickedColor
   };
 
   if (editId) {
     const j = jobs.find(x => x.id === editId);
-    if (j) Object.assign(j, jdata);
+    if (j) {
+      Object.assign(j, jdata);
+      shifts.forEach(s => {
+        if (s.jobId === j.id) {
+          captureShiftJobMeta(s, j);
+          s.pay = calcShiftPay(s, j).total;
+        }
+      });
+    }
   } else {
-    jobs.push({ id: nextJobId++, ...jdata });
+    jobs.push({ id: nextJobId++, createdAt: Date.now(), ...jdata });
   }
 
   closeJob();
@@ -739,7 +952,9 @@ function saveJob() {
   renderJobCards();
   fillJobSel();
   renderCalendar();
+  renderShifts();
   renderHomeStats();
+  if (curPage === 'report') renderReport(curPeriod);
 }
 
 async function delJob(id) {

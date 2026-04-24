@@ -28,6 +28,7 @@ let curLang = 'vi', curPage = 'home', curPeriod = 'week';
 let pickedIcon = '🍜', pickedColor = '#1a2f5e';
 let filterJobId = null;
 let editAlws = [];
+let editDeds = [];
 let otIsOn = false;
 let curCurrency = 'jpy';
 let userName = '';
@@ -63,9 +64,12 @@ function hydrateStoredData() {
       if (!shift.jobType)  { shift.jobType = job.type; changed = true; }
       if (!shift.jobIcon)  { shift.jobIcon = job.icon; changed = true; }
       if (!shift.jobColor) { shift.jobColor = job.color; changed = true; }
-      if (!Number.isFinite(shift.pay) && typeof calcShiftPay === 'function') {
-        shift.pay = calcShiftPay(shift, job).total;
-        changed = true;
+      if (typeof calcShiftPay === 'function') {
+        const recomputed = calcShiftPay(shift, job).total;
+        if (shift.pay !== recomputed) {
+          shift.pay = recomputed;
+          changed = true;
+        }
       }
     }
   });

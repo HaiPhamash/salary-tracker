@@ -17,10 +17,20 @@ function renderHomeStats() {
   const wkAgoStr = localYmd(wkAgo);
 
   const todayShifts = shifts.filter(s => s.date === today);
-  const todayAmt    = todayShifts.reduce((a, s) => a + (s.pay || 0), 0);
-  const wkAmt       = shifts.filter(s => s.date >= wkAgoStr && s.date <= today).reduce((a, s) => a + (s.pay || 0), 0);
-  const moAmt       = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.pay || 0), 0);
-  const yrAmt       = shifts.filter(s => s.date.startsWith(yr + '')).reduce((a, s) => a + (s.pay || 0), 0);
+  const moStart = mo + '-01';
+  const moEnd   = mo + '-' + pad2(daysInMonth(now.getFullYear(), now.getMonth() + 1));
+  const yrStart = yr + '-01-01';
+  const yrEnd   = yr + '-12-31';
+
+  const todayGross = todayShifts.reduce((a, s) => a + (s.pay || 0), 0);
+  const wkGross    = shifts.filter(s => s.date >= wkAgoStr && s.date <= today).reduce((a, s) => a + (s.pay || 0), 0);
+  const moGross    = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.pay || 0), 0);
+  const yrGross    = shifts.filter(s => s.date.startsWith(yr + '')).reduce((a, s) => a + (s.pay || 0), 0);
+
+  const todayAmt = todayGross + getMonthlyAllowanceForRange(today, today) - getDeductionsForRange(today, today);
+  const wkAmt    = wkGross    + getMonthlyAllowanceForRange(wkAgoStr, today) - getDeductionsForRange(wkAgoStr, today);
+  const moAmt    = moGross    + getMonthlyAllowanceForRange(moStart, moEnd) - getDeductionsForRange(moStart, moEnd);
+  const yrAmt    = yrGross    + getMonthlyAllowanceForRange(yrStart, yrEnd) - getDeductionsForRange(yrStart, yrEnd);
   const moHours     = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.hours || 0), 0);
   const moOT        = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.otH || 0), 0);
   const otCount     = todayShifts.filter(s => s.isOT || s.otH > 0).length;
@@ -30,10 +40,14 @@ function renderHomeStats() {
     : '—';
 
   set('todayAmt', fmt(todayAmt));
+  setNegClass('todayAmt', todayAmt < 0);
   set('todaySub', sub);
   set('wkAmt',    fmt(wkAmt));
+  setNegClass('wkAmt', wkAmt < 0);
   set('moAmt',    fmt(moAmt));
+  setNegClass('moAmt', moAmt < 0);
   set('yrAmt',    fmt(yrAmt));
+  setNegClass('yrAmt', yrAmt < 0);
   set('hrsV',     moHours.toFixed(0) + 'h');
   set('otV',      moOT.toFixed(0) + 'h OT');
   set('jobsV',    jobs.length + ' ' + t.jobsL.toLowerCase());
@@ -54,6 +68,54 @@ function renderHomeStats() {
   } else {
     set('goalV', '—');
   }
+
+  renderHomeBreakdown(moStart, moEnd, moGross);
+}
+
+function renderHomeBreakdown(fromYmd, toYmd, gross) {
+  const el = document.getElementById('homeBreakdown');
+  if (!el) return;
+  const t = L[curLang] || {};
+  const alwBreakdown = getMonthlyAllowanceBreakdown(fromYmd, toYmd, null);
+  const alwTotal = alwBreakdown.reduce((s, b) => s + b.total, 0);
+  const dedBreakdown = getDeductionsBreakdown(fromYmd, toYmd, null);
+  const dedTotal = dedBreakdown.reduce((s, b) => s + b.total, 0);
+
+  if (alwTotal <= 0 && dedTotal <= 0) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+
+  const alwRows = alwBreakdown.map(b => `
+    <div class="bd-sub">
+      <span>${esc(b.jobIcon || '')} ${esc(b.jobName || '')} — ${b.items.map(i => esc(i.name)).join(', ')}</span>
+      <span class="bd-sub-val">+${fmt(b.total)}</span>
+    </div>
+  `).join('');
+
+  const dedRows = dedBreakdown.map(b => `
+    <div class="bd-sub">
+      <span>${esc(b.jobIcon || '')} ${esc(b.jobName || '')} — ${b.items.map(i => esc(i.name) + (i.valueType === 'percent' ? ' (' + i.rawAmount + '%)' : '')).join(', ')}</span>
+      <span class="bd-sub-val bd-sub-val--neg">−${fmt(b.total)}</span>
+    </div>
+  `).join('');
+
+  const alwBlock = alwTotal > 0
+    ? `<div class="bd-row bd-alw"><span class="bd-label">${t.bdAlwMonth || 'Monthly allowance'}</span><span class="bd-value">+${fmt(alwTotal)}</span></div>${alwRows}`
+    : '';
+  const dedBlock = dedTotal > 0
+    ? `<div class="bd-row bd-ded"><span class="bd-label">${t.bdDed || 'Deductions'}</span><span class="bd-value">−${fmt(dedTotal)}</span></div>${dedRows}`
+    : '';
+
+  el.innerHTML = `
+    <div class="bd-title">${t.bdTitleMonth || 'Breakdown this month'}</div>
+    <div class="bd-row"><span class="bd-label">${t.bdGross || 'Shift income'}</span><span class="bd-value">${fmt(gross)}</span></div>
+    ${alwBlock}
+    ${dedBlock}
+    <div class="bd-row bd-total"><span class="bd-label">${t.bdNet || t.bdTotal || 'Net'}</span><span class="bd-value${(gross + alwTotal - dedTotal) < 0 ? ' is-neg' : ''}">${fmt(gross + alwTotal - dedTotal)}</span></div>
+  `;
+  el.style.display = 'block';
 }
 
 async function editMonthlyGoal() {
@@ -298,9 +360,19 @@ function getMonthShifts(src, ym) {
   return src.filter(s => s.date.startsWith(ym));
 }
 
-function summarizeShiftBucket(list) {
+function summarizeShiftBucket(list, rangeFrom, rangeTo, jobIdFilter) {
+  const gross = list.reduce((sum, shift) => sum + getShiftPay(shift), 0);
+  const monAlw = (rangeFrom && rangeTo)
+    ? getMonthlyAllowanceForRange(rangeFrom, rangeTo, jobIdFilter || null)
+    : 0;
+  const deductions = (rangeFrom && rangeTo)
+    ? getDeductionsForRange(rangeFrom, rangeTo, jobIdFilter || null)
+    : 0;
   return {
-    total: list.reduce((sum, shift) => sum + getShiftPay(shift), 0),
+    total: gross + monAlw - deductions,
+    gross,
+    monAlw,
+    deductions,
     shifts: list.length,
     hours: list.reduce((sum, shift) => sum + (shift.hours || 0), 0),
     otHours: list.reduce((sum, shift) => sum + (shift.otH || 0), 0)
@@ -310,9 +382,11 @@ function summarizeShiftBucket(list) {
 function formatChartValue(value) {
   const sym = getCurSym();
   if (!value) return '';
-  if (value >= 1000000) return sym + (value / 1000000).toFixed(1) + 'M';
-  if (value >= 1000) return sym + (value / 1000).toFixed(0) + 'k';
-  return sym + Math.round(value);
+  const sign = value < 0 ? '−' : '';
+  const abs = Math.abs(value);
+  if (abs >= 1000000) return sign + sym + (abs / 1000000).toFixed(1) + 'M';
+  if (abs >= 1000) return sign + sym + (abs / 1000).toFixed(0) + 'k';
+  return sign + sym + Math.round(abs);
 }
 
 function renderShiftDetails(list) {
@@ -920,11 +994,15 @@ function calcPrev() {
     const otExtra = (otIsOn && job.otType === 'manual')
       ? (parseInt(document.getElementById('inp_otamt').value) || 0) : 0;
     base = (otIsOn && job.otType === 'multiplier') ? Math.round(dayVal * job.otMultiplier) : dayVal;
-    const monAlwD = Math.round(monAlw / job.workDays);
-    total = Math.round(base + dayAlw + monAlwD + otExtra);
+    total = Math.round(base + dayAlw + otExtra);
     bkd = `${t.type_monthly}: ¥${job.rate.toLocaleString()}÷${job.workDays}d = ${fmt(dayVal)}`;
     if (otIsOn)             bkd += `<br>🔥 OT: ${fmt(base)}${otExtra > 0 ? ' + ' + fmt(otExtra) : ''}`;
-    if (dayAlw > 0 || monAlw > 0) bkd += `<br>${t.allowance}: ${fmt(dayAlw + monAlwD)}`;
+    if (dayAlw > 0) bkd += `<br>${t.allowance}: ${fmt(dayAlw)}`;
+  }
+
+  if (monAlw > 0) {
+    const monAlwHint = (t.monAlwHint || 'Monthly allowance {amt} applied separately in reports');
+    bkd += `<br><span style="color:var(--text-muted);font-size:12px;">💡 ${monAlwHint.replace('{amt}', fmt(monAlw))}</span>`;
   }
 
   document.getElementById('calcVal').textContent = fmt(total);
@@ -1246,17 +1324,28 @@ function renderReport(period) {
   let canPrev = false;
   let canNext = false;
 
+  let rangeStart = null;
+  let rangeEnd = null;
+
   if (period === 'week') {
     const { minEnd, maxEnd } = getReportWeekBounds();
     const endStr = reportWeekCursor;
     const startStr = shiftYmd(endStr, -6);
+    rangeStart = startStr;
+    rangeEnd   = endStr;
     filtered = src.filter(s => s.date >= startStr && s.date <= endStr);
     for (let i = 6; i >= 0; i--) {
       const ds = shiftYmd(endStr, -i);
       const d = new Date(ds + 'T12:00:00');
+      const dayGross = src.filter(s => s.date === ds).reduce((sum, shift) => sum + getShiftPay(shift), 0);
+      const dayAlw = getMonthlyAllowanceForRange(ds, ds, filterJobId || null);
+      const dayDed = getDeductionsForRange(ds, ds, filterJobId || null);
       chartItems.push({
         label: t.days[d.getDay()],
-        value: src.filter(s => s.date === ds).reduce((sum, shift) => sum + getShiftPay(shift), 0),
+        gross: dayGross,
+        alw: dayAlw,
+        ded: dayDed,
+        value: dayGross + dayAlw - dayDed,
         selected: false,
         action: ''
       });
@@ -1269,13 +1358,28 @@ function renderReport(period) {
   } else if (period === 'month') {
     const { minYm, maxYm } = getReportMonthBounds();
     const visibleMonths = [0, 1, 2, 3].map(offset => monthShift(reportMonthWindowStart, offset));
-    chartItems = visibleMonths.map(ym => ({
-      label: getMonthLabel(ym, true),
-      value: getMonthShifts(src, ym).reduce((sum, shift) => sum + getShiftPay(shift), 0),
-      selected: ym === reportMonthCursor,
-      action: ym >= minYm && ym <= maxYm ? `selectReportMonth('${ym}')` : ''
-    }));
+    chartItems = visibleMonths.map(ym => {
+      const [yy, mm] = ym.split('-').map(Number);
+      const dim = daysInMonth(yy, mm);
+      const mStart = ym + '-01';
+      const mEnd   = ym + '-' + pad2(dim);
+      const gross = getMonthShifts(src, ym).reduce((sum, shift) => sum + getShiftPay(shift), 0);
+      const alw = getMonthlyAllowanceForRange(mStart, mEnd, filterJobId || null);
+      const ded = getDeductionsForRange(mStart, mEnd, filterJobId || null);
+      return {
+        label: getMonthLabel(ym, true),
+        gross,
+        alw,
+        ded,
+        value: gross + alw - ded,
+        selected: ym === reportMonthCursor,
+        action: ym >= minYm && ym <= maxYm ? `selectReportMonth('${ym}')` : ''
+      };
+    });
     filtered = getMonthShifts(src, reportMonthCursor);
+    const [cy, cm] = reportMonthCursor.split('-').map(Number);
+    rangeStart = reportMonthCursor + '-01';
+    rangeEnd   = reportMonthCursor + '-' + pad2(daysInMonth(cy, cm));
     chartTitle = getReportText('monthIncome', 'Monthly income');
     detailsTitle = getReportText('monthShiftDetails', 'Monthly shift details');
     summaryLabel = getMonthLabel(reportMonthCursor, false);
@@ -1292,16 +1396,28 @@ function renderReport(period) {
     chartItems = [0, 1, 2, 3].map(index => {
       const quarterMonths = getQuarterMonths(reportQuarterYear, index);
       const list = src.filter(s => quarterMonths.some(ym => s.date.startsWith(ym)));
+      const qStart = quarterMonths[0] + '-01';
+      const [qy, qm] = quarterMonths[2].split('-').map(Number);
+      const qEnd   = quarterMonths[2] + '-' + pad2(daysInMonth(qy, qm));
+      const summary = summarizeShiftBucket(list, qStart, qEnd, filterJobId || null);
       return {
         label: getQuarterLabel(reportQuarterYear, index).replace(' / ' + reportQuarterYear, '').replace(' ' + reportQuarterYear, ''),
-        value: summarizeShiftBucket(list).total,
+        gross: summary.gross,
+        alw: summary.monAlw,
+        ded: summary.deductions,
+        value: summary.total,
         selected: index === reportQuarterIndex,
         action: `selectReportQuarter(${index})`
       };
     });
     filtered = src.filter(s => months.some(ym => s.date.startsWith(ym)));
+    rangeStart = months[0] + '-01';
+    const [ly, lm] = months[2].split('-').map(Number);
+    rangeEnd   = months[2] + '-' + pad2(daysInMonth(ly, lm));
     const breakdown = months.map(ym => {
-      const summary = summarizeShiftBucket(getMonthShifts(src, ym));
+      const [yy, mm] = ym.split('-').map(Number);
+      const dim = daysInMonth(yy, mm);
+      const summary = summarizeShiftBucket(getMonthShifts(src, ym), ym + '-01', ym + '-' + pad2(dim), filterJobId || null);
       return { label: getMonthLabel(ym, false), ...summary };
     });
     chartTitle = getReportText('quarterIncome', 'Quarter income');
@@ -1314,15 +1430,27 @@ function renderReport(period) {
   } else {
     const years = getYearList();
     filtered = src.filter(s => s.date.startsWith(String(reportYearCursor)));
-    chartItems = years.map(year => ({
-      label: String(year),
-      value: src.filter(s => s.date.startsWith(String(year))).reduce((sum, shift) => sum + getShiftPay(shift), 0),
-      selected: year === reportYearCursor,
-      action: `selectReportYear(${year})`
-    }));
+    rangeStart = reportYearCursor + '-01-01';
+    rangeEnd   = reportYearCursor + '-12-31';
+    chartItems = years.map(year => {
+      const yGross = src.filter(s => s.date.startsWith(String(year))).reduce((sum, shift) => sum + getShiftPay(shift), 0);
+      const yAlw = getMonthlyAllowanceForRange(year + '-01-01', year + '-12-31', filterJobId || null);
+      const yDed = getDeductionsForRange(year + '-01-01', year + '-12-31', filterJobId || null);
+      return {
+        label: String(year),
+        gross: yGross,
+        alw: yAlw,
+        ded: yDed,
+        value: yGross + yAlw - yDed,
+        selected: year === reportYearCursor,
+        action: `selectReportYear(${year})`
+      };
+    });
     const breakdown = Array.from({ length: 12 }, (_, index) => {
       const ym = reportYearCursor + '-' + pad2(index + 1);
-      const summary = summarizeShiftBucket(getMonthShifts(src, ym));
+      const [yy, mm] = ym.split('-').map(Number);
+      const dim = daysInMonth(yy, mm);
+      const summary = summarizeShiftBucket(getMonthShifts(src, ym), ym + '-01', ym + '-' + pad2(dim), filterJobId || null);
       return { label: getMonthLabel(ym, false), ...summary };
     });
     chartTitle = getReportText('yearIncome', 'Year income');
@@ -1334,16 +1462,26 @@ function renderReport(period) {
     canNext = reportYearCursor < years[years.length - 1];
   }
 
-  const total  = filtered.reduce((a, c) => a + getShiftPay(c), 0);
+  const gross = filtered.reduce((a, c) => a + getShiftPay(c), 0);
+  const periodMonAlw = (rangeStart && rangeEnd)
+    ? getMonthlyAllowanceForRange(rangeStart, rangeEnd, filterJobId || null)
+    : 0;
+  const periodDed = (rangeStart && rangeEnd)
+    ? getDeductionsForRange(rangeStart, rangeEnd, filterJobId || null)
+    : 0;
+  const total  = gross + periodMonAlw - periodDed;
   const totalH = filtered.reduce((a, c) => a + (c.hours || 0), 0);
   const totalOt = filtered.reduce((sum, shift) => sum + (shift.otH || 0), 0);
 
   set('rPeriodLbl', summaryLabel);
   set('rMainVal', fmt(total));
+  setNegClass('rMainVal', total < 0);
   set('rSub', filtered.length + ' ' + t.shiftsUnit + ' · ' + totalH.toFixed(0) + 'h' + (totalOt > 0 ? ' · ' + totalOt.toFixed(0) + 'h OT' : ''));
   set('chartTit', chartTitle);
   set('chartRangeLbl', rangeLabel);
   set('detTit', detailsTitle);
+
+  renderReportAlwBreakdown(rangeStart, rangeEnd, gross, periodMonAlw, periodDed);
 
   const showNav = period !== 'quarter';
   if (chartStage) chartStage.classList.toggle('chart-stage--navless', !showNav);
@@ -1355,20 +1493,76 @@ function renderReport(period) {
     nextBtn.hidden = !showNav;
     nextBtn.disabled = !showNav || !canNext;
   }
-  const values = chartItems.map(item => item.value);
-  const mx = Math.max(...values, 1);
+  const positiveValues = chartItems.map(item => Math.max(0, item.value));
+  const mx = Math.max(...positiveValues, 1);
   const hasSelection = chartItems.some(item => item.selected);
-  const maxIdx = values.indexOf(Math.max(...values));
+  const maxPositive = Math.max(...positiveValues);
+  const maxIdx = positiveValues.indexOf(maxPositive);
   if (barChart) {
-    barChart.innerHTML = chartItems.map((item, index) => `
-      <button type="button" class="bar-wrap${item.selected ? ' is-selected' : ''}" ${item.action ? `onclick="${item.action}"` : 'disabled'}>
-        <div class="bar-value">${item.value > 0 ? formatChartValue(item.value) : ''}</div>
-        <div class="bar${(item.selected || (!hasSelection && index === maxIdx)) ? ' acc' : ''}" style="height:${Math.max(4, Math.round(item.value / mx * 140))}px;"></div>
+    barChart.innerHTML = chartItems.map((item, index) => {
+      const displayVal = Math.max(0, item.value);
+      const totalH = Math.max(4, Math.round(displayVal / mx * 140));
+      const alwH = displayVal > 0 ? Math.round(totalH * (item.alw || 0) / displayVal) : 0;
+      const grossH = totalH - alwH;
+      const isAcc = item.selected || (!hasSelection && index === maxIdx);
+      const isNeg = item.value < 0;
+      const valueLabel = item.value !== 0 ? formatChartValue(item.value) : '';
+      return `
+      <button type="button" class="bar-wrap${item.selected ? ' is-selected' : ''}${isNeg ? ' is-neg' : ''}" ${item.action ? `onclick="${item.action}"` : 'disabled'}>
+        <div class="bar-value">${valueLabel}</div>
+        <div class="bar${isAcc ? ' acc' : ''}${isNeg ? ' bar--neg' : ''}" style="height:${totalH}px;">
+          ${alwH > 0 ? `<div class="bar-seg bar-seg--alw" style="height:${alwH}px;"></div>` : ''}
+          <div class="bar-seg bar-seg--gross" style="height:${grossH}px;"></div>
+        </div>
         <div class="bar-label">${item.label}</div>
-      </button>`).join('');
+      </button>`;
+    }).join('');
   }
 
   document.getElementById('rDetails').innerHTML = detailsHtml;
+}
+
+function renderReportAlwBreakdown(rangeStart, rangeEnd, gross, alwTotal, dedTotal) {
+  const el = document.getElementById('reportAlwBreakdown');
+  if (!el) return;
+  if (!rangeStart || !rangeEnd || ((alwTotal || 0) <= 0 && (dedTotal || 0) <= 0)) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  const t = L[curLang] || {};
+  const alwBreakdown = getMonthlyAllowanceBreakdown(rangeStart, rangeEnd, filterJobId || null);
+  const dedBreakdown = getDeductionsBreakdown(rangeStart, rangeEnd, filterJobId || null);
+
+  const alwRows = alwBreakdown.map(b => `
+    <div class="bd-sub">
+      <span>${esc(b.jobIcon || '')} ${esc(b.jobName || '')} — ${b.items.map(i => esc(i.name)).join(', ')}</span>
+      <span class="bd-sub-val">+${fmt(b.total)}</span>
+    </div>
+  `).join('');
+
+  const dedRows = dedBreakdown.map(b => `
+    <div class="bd-sub">
+      <span>${esc(b.jobIcon || '')} ${esc(b.jobName || '')} — ${b.items.map(i => esc(i.name) + (i.valueType === 'percent' ? ' (' + i.rawAmount + '%)' : '')).join(', ')}</span>
+      <span class="bd-sub-val bd-sub-val--neg">−${fmt(b.total)}</span>
+    </div>
+  `).join('');
+
+  const alwBlock = (alwTotal || 0) > 0
+    ? `<div class="bd-row bd-alw"><span class="bd-label">${t.bdAlwMonth || 'Monthly allowance'}</span><span class="bd-value">+${fmt(alwTotal)}</span></div>${alwRows}`
+    : '';
+  const dedBlock = (dedTotal || 0) > 0
+    ? `<div class="bd-row bd-ded"><span class="bd-label">${t.bdDed || 'Deductions'}</span><span class="bd-value">−${fmt(dedTotal)}</span></div>${dedRows}`
+    : '';
+
+  el.innerHTML = `
+    <div class="bd-title">${t.bdTitlePeriod || 'Period breakdown'}</div>
+    <div class="bd-row"><span class="bd-label">${t.bdGross || 'Shift income'}</span><span class="bd-value">${fmt(gross)}</span></div>
+    ${alwBlock}
+    ${dedBlock}
+    <div class="bd-row bd-total"><span class="bd-label">${t.bdNet || t.bdTotal || 'Net'}</span><span class="bd-value${(gross + (alwTotal || 0) - (dedTotal || 0)) < 0 ? ' is-neg' : ''}">${fmt(gross + (alwTotal || 0) - (dedTotal || 0))}</span></div>
+  `;
+  el.style.display = 'block';
 }
 
 /* -------- Settings / Job Cards -------- */
@@ -1391,8 +1585,18 @@ function renderJobCards() {
     const otLabel  = j.type === 'hourly'
       ? t.otAfterTpl.replace('{h}', j.otThreshold).replace('{m}', j.otMultiplier)
       : t.otTimesTpl.replace('{m}', j.otMultiplier);
-    const alwTags = j.allowances
-      .map(a => `<span class="allowance-tag">${esc(a.name)} ${sym}${a.amount}/${a.per === 'day' ? t.alwDayShort : t.alwMonShort}</span>`)
+    const alwTags = (j.allowances || [])
+      .map(a => {
+        const shortPer = a.per === 'day' ? t.alwDayShort : a.per === 'year' ? (t.alwYearShort || 'y') : t.alwMonShort;
+        return `<span class="allowance-tag">${esc(a.name)} ${sym}${a.amount}/${shortPer}</span>`;
+      })
+      .join('');
+    const dedTags = (j.deductions || [])
+      .map(d => {
+        const amtStr = d.valueType === 'percent' ? (d.amount + '%') : (sym + d.amount);
+        const shortPer = d.per === 'day' ? t.alwDayShort : d.per === 'year' ? (t.alwYearShort || 'y') : t.alwMonShort;
+        return `<span class="deduction-tag">−${esc(d.name)} ${esc(amtStr)}/${shortPer}</span>`;
+      })
       .join('');
 
     return `<div class="job-card">
@@ -1407,7 +1611,11 @@ function renderJobCards() {
           <button class="icon-btn" onclick="delJob(${j.id})" style="color:var(--red);">🗑️</button>
         </div>
       </div>
-      <div class="job-card-detail">${otLabel}${j.allowances.length > 0 ? `<div class="job-card-allowances">${alwTags}</div>` : ''}</div>
+      <div class="job-card-detail">
+        ${otLabel}
+        ${(j.allowances || []).length > 0 ? `<div class="job-card-allowances">${alwTags}</div>` : ''}
+        ${(j.deductions || []).length > 0 ? `<div class="job-card-allowances">${dedTags}</div>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
