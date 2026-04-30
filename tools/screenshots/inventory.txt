@@ -1,0 +1,32 @@
+# Screenshot inventory — 30 shots per language
+# Format: <key>|<short description for navigator>
+home-empty|Home tab BEFORE seed reload — fresh empty state (skip if app already seeded)
+home-dashboard|Home tab — top with today/week/month/year income & spent today
+home-recent|Home tab — scroll down to "Recent work" section
+home-stats|Home tab — scroll down to quick stats / monthly goal
+add-calendar|Add Work tab — calendar grid view
+add-list|Add Work tab — switch to list/timeline view
+add-shift-form|Add Work — open new shift form (tap a date or +)
+add-from-history|Add Work — open "Add from history" picker (template list)
+expense-form|Open "Add expense" modal (from dashboard or day sheet)
+expense-day|Day sheet showing both shifts and expenses (tap a day with both)
+report-week|Report tab — Week period
+report-month|Report tab — Month period
+report-quarter|Report tab — Quarter period
+report-year|Report tab — Year period
+report-export|Report tab — open Export CSV/PDF dialog
+settings-root|Settings tab root — full list of sections
+settings-jobs-list|Settings — Job list cards expanded
+settings-job-edit|Settings — Job edit form (showing OT/allowance/deduction)
+settings-job-icon|Settings — Icon & color picker inside Job edit
+settings-categories|Settings — Expense categories list
+settings-category-edit|Settings — Expense category edit form
+settings-recurring|Settings — Recurring expenses list
+settings-recurring-edit|Settings — Recurring expense edit form
+settings-language|Settings — Language picker modal
+settings-currency|Settings — Currency picker modal
+settings-users|Settings — Users management modal
+settings-export|Settings — Export Data dialog
+jp-input|Japan Take-home Plus — input screen
+jp-result|Japan Take-home Plus — scrolled to result/breakdown
+onboarding|Onboarding screen (first-launch tutorial)

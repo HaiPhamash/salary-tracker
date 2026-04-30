@@ -8,6 +8,7 @@ let reportSwipeSuppressUntil = 0;
 /* -------- Home -------- */
 
 function renderHomeStats() {
+  if (typeof generateDueMonthlyExpenses === 'function') generateDueMonthlyExpenses();
   const t     = L[curLang];
   const now   = new Date();
   const today = localYmd(now);
@@ -27,10 +28,22 @@ function renderHomeStats() {
   const moGross    = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.pay || 0), 0);
   const yrGross    = shifts.filter(s => s.date.startsWith(yr + '')).reduce((a, s) => a + (s.pay || 0), 0);
 
-  const todayAmt = todayGross + getMonthlyAllowanceForRange(today, today) - getDeductionsForRange(today, today);
+  // "Today" reflects today-only actions: shift pay (which already includes day
+  // allowances). Monthly/yearly allowances + deductions are only meaningful at
+  // the month/year level — prorating them to a single day produces confusing
+  // negative "Today's income" values when the user has no shift that day.
+  const todayAmt = todayGross;
   const wkAmt    = wkGross    + getMonthlyAllowanceForRange(wkAgoStr, today) - getDeductionsForRange(wkAgoStr, today);
   const moAmt    = moGross    + getMonthlyAllowanceForRange(moStart, moEnd) - getDeductionsForRange(moStart, moEnd);
   const yrAmt    = yrGross    + getMonthlyAllowanceForRange(yrStart, yrEnd) - getDeductionsForRange(yrStart, yrEnd);
+  const todayExpense = getExpenseTotalForRange(today, today);
+  const wkExpense    = getExpenseTotalForRange(wkAgoStr, today);
+  const moExpense    = getExpenseTotalForRange(moStart, moEnd);
+  const yrExpense    = getExpenseTotalForRange(yrStart, yrEnd);
+  const todayRemain = todayAmt - todayExpense;
+  const wkRemain    = wkAmt - wkExpense;
+  const moRemain    = moAmt - moExpense;
+  const yrRemain    = yrAmt - yrExpense;
   const moHours     = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.hours || 0), 0);
   const moOT        = shifts.filter(s => s.date.startsWith(mo)).reduce((a, s) => a + (s.otH || 0), 0);
   const otCount     = todayShifts.filter(s => s.isOT || s.otH > 0).length;
@@ -42,12 +55,18 @@ function renderHomeStats() {
   set('todayAmt', fmt(todayAmt));
   setNegClass('todayAmt', todayAmt < 0);
   set('todaySub', sub);
+  set('todayExpenseAmt', fmt(todayExpense));
+  set('todayRemainAmt', fmt(todayRemain));
+  setNegClass('todayRemainAmt', todayRemain < 0);
   set('wkAmt',    fmt(wkAmt));
   setNegClass('wkAmt', wkAmt < 0);
   set('moAmt',    fmt(moAmt));
   setNegClass('moAmt', moAmt < 0);
   set('yrAmt',    fmt(yrAmt));
   setNegClass('yrAmt', yrAmt < 0);
+  set('wkCashSub', getCashMiniText(wkExpense, wkRemain));
+  set('moCashSub', getCashMiniText(moExpense, moRemain));
+  set('yrCashSub', getCashMiniText(yrExpense, yrRemain));
   set('hrsV',     moHours.toFixed(0) + 'h');
   set('otV',      moOT.toFixed(0) + 'h OT');
   set('jobsV',    jobs.length + ' ' + t.jobsL.toLowerCase());
@@ -70,6 +89,10 @@ function renderHomeStats() {
   }
 
   renderHomeBreakdown(moStart, moEnd, moGross);
+}
+
+function getCashMiniText(expense, remaining) {
+  return txt('expenseShortLbl', 'Chi') + ' ' + fmt(expense) + ' · ' + txt('remainingShortLbl', 'Còn') + ' ' + fmt(remaining);
 }
 
 function renderHomeBreakdown(fromYmd, toYmd, gross) {
@@ -248,9 +271,9 @@ function getReportText(key, fallback) {
 
 function getReportMinDate() {
   const profileStart = localYmd(getProfileStartDate());
-  const shiftDates = shifts.map(s => s.date).filter(Boolean).sort();
-  const earliestShift = shiftDates.length ? shiftDates[0] : profileStart;
-  return earliestShift < profileStart ? earliestShift : profileStart;
+  const dataDates = shifts.map(s => s.date).concat(expenses.map(e => e.date)).filter(Boolean).sort();
+  const earliestData = dataDates.length ? dataDates[0] : profileStart;
+  return earliestData < profileStart ? earliestData : profileStart;
 }
 
 function getProfileStartDate() {
@@ -260,9 +283,9 @@ function getProfileStartDate() {
 }
 
 function getReportMaxDate() {
-  const shiftDates = shifts.map(s => s.date).filter(Boolean).sort();
-  const latestShift = shiftDates.length ? shiftDates[shiftDates.length - 1] : localYmd();
-  return latestShift > localYmd() ? latestShift : localYmd();
+  const dataDates = shifts.map(s => s.date).concat(expenses.map(e => e.date)).filter(Boolean).sort();
+  const latestData = dataDates.length ? dataDates[dataDates.length - 1] : localYmd();
+  return latestData > localYmd() ? latestData : localYmd();
 }
 
 function getReportWeekBounds() {
@@ -423,6 +446,48 @@ function renderBreakdownDetails(items) {
     </div>`).join('')}</div>`;
 }
 
+function renderExpenseBreakdownDetails(rangeStart, rangeEnd) {
+  if (!rangeStart || !rangeEnd) return `<div class="recent-empty">${getReportText('noData', 'No data yet')}</div>`;
+  const items = getExpenseBreakdownForRange(rangeStart, rangeEnd);
+  if (!items.length) return `<div class="recent-empty">${txt('noExpenses', 'Chưa có khoản chi')}</div>`;
+  const total = items.reduce((sum, item) => sum + item.total, 0) || 1;
+  return `<div>${items.map(item => {
+    const pct = Math.round(item.total / total * 100);
+    return `<div class="expense-breakdown-row">
+      <div class="expense-breakdown-icon" style="background:${item.categoryColor};">${esc(item.categoryIcon)}</div>
+      <div class="expense-breakdown-main">
+        <div class="expense-breakdown-title">${esc(item.categoryName)}</div>
+        <div class="expense-breakdown-sub">${item.count} ${txt('expensesUnit', 'khoản chi')} · ${pct}%</div>
+      </div>
+      <div class="expense-breakdown-val">−${fmt(item.total)}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderExpenseDetails(rangeStart, rangeEnd) {
+  if (!rangeStart || !rangeEnd) return `<div class="recent-empty">${getReportText('noData', 'No data yet')}</div>`;
+  const list = getExpensesForRange(rangeStart, rangeEnd, null)
+    .sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date);
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+  if (!list.length) return `<div class="recent-empty">${txt('noExpenses', 'Chưa có khoản chi')}</div>`;
+  return `<div class="report-detail-list">${list.map(item => {
+    const category = getExpenseCategoryMeta(item);
+    const source = item.source === 'recurring' ? ' · ' + txt('recurringSourceLbl', 'Định kỳ') : '';
+    return `<div class="report-detail-row">
+      <div style="width:36px;height:36px;background:${category.color};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:#fff;">${esc(category.icon)}</div>
+      <div class="report-detail-main">
+        <div class="report-detail-title">${fmtDate(item.date)} · ${esc(category.name)}</div>
+        <div class="report-detail-sub">${esc(item.note || txt('expenseLbl', 'Chi tiêu'))}${source}</div>
+      </div>
+      <div class="report-detail-pay">
+        <div class="main" style="color:var(--red);">−${fmt(getExpenseAmount(item))}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function getCalendarActionDate() {
   if (calSelectedDate && calSelectedDate.startsWith(calCursor)) return calSelectedDate;
   return calCursor + '-01';
@@ -511,9 +576,10 @@ function renderCalGrid() {
   const start = new Date(y, m - 1, 1 - leading);
   const today = localYmd();
 
-  // count shifts per date for this window
-  const counts = {};
-  shifts.forEach(s => { counts[s.date] = (counts[s.date] || 0) + 1; });
+  const shiftCounts = {};
+  const expenseCounts = {};
+  shifts.forEach(s => { shiftCounts[s.date] = (shiftCounts[s.date] || 0) + 1; });
+  expenses.forEach(e => { expenseCounts[e.date] = (expenseCounts[e.date] || 0) + 1; });
 
   let html = '';
   for (let i = 0; i < 42; i++) {
@@ -527,10 +593,12 @@ function renderCalGrid() {
     if (dow === 6) cls.push('sat');
     if (date === today) cls.push('today');
     if (date === calSelectedDate) cls.push('selected');
-    const n = counts[date] || 0;
-    const dots = n > 0
-      ? '<div class="cal-dots">' + Array.from({ length: Math.min(n, 3) }, () => '<div class="cal-dot"></div>').join('') + '</div>'
-      : '<div class="cal-dots"></div>';
+    const shiftN = shiftCounts[date] || 0;
+    const expenseN = expenseCounts[date] || 0;
+    const dotParts = [];
+    for (let n = 0; n < Math.min(shiftN, expenseN ? 2 : 3); n++) dotParts.push('<div class="cal-dot"></div>');
+    if (expenseN > 0) dotParts.push('<div class="cal-dot cal-dot--expense"></div>');
+    const dots = '<div class="cal-dots">' + dotParts.slice(0, 3).join('') + '</div>';
     html += `<div class="${cls.join(' ')}" data-date="${date}" onclick="onCalCellTap('${date}')">${d.getDate()}${dots}</div>`;
   }
   grid.innerHTML = html;
@@ -551,6 +619,9 @@ function renderCalList() {
     const dayRows = shifts
       .filter(s => s.date === date)
       .sort((a, b) => (a.start || '').localeCompare(b.start || '') || a.id - b.id);
+    const dayExpenses = expenses
+      .filter(item => item.date === date)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     const isSelected = date === calSelectedDate;
     const dow = dt.getDay();
     const dayClass = [
@@ -558,7 +629,8 @@ function renderCalList() {
       isSelected ? 'selected' : '',
       dow === 0 ? 'sun' : '',
       dow === 6 ? 'sat' : '',
-      dayRows.length ? 'has-shifts' : ''
+      dayRows.length ? 'has-shifts' : '',
+      dayExpenses.length ? 'has-expenses' : ''
     ].filter(Boolean).join(' ');
 
     const shiftHtml = dayRows.length
@@ -578,7 +650,22 @@ function renderCalList() {
             <div class="cal-timeline-pay">${fmt(getShiftPay(s))}</div>
           </button>`;
         }).join('')
-      : `<button class="cal-list-empty-day" onclick="event.stopPropagation();openDaySheet('${date}')">＋ ${t.cal_newShift || 'Add shift'}</button>`;
+      : '';
+    const expenseHtml = dayExpenses.map(item => {
+      const category = getExpenseCategoryMeta(item);
+      return `<button class="cal-timeline-shift cal-timeline-expense" onclick="event.stopPropagation();openEditExpense(${item.id})">
+        <div class="cal-timeline-time">—</div>
+        <div class="cal-timeline-bar" style="background:${category.color};"></div>
+        <div class="cal-timeline-main">
+          <div class="cal-timeline-job">${esc(category.icon)} ${esc(category.name)}</div>
+          <div class="cal-timeline-meta">${esc(item.note || txt('expenseLbl', 'Chi tiêu'))}</div>
+        </div>
+        <div class="cal-timeline-pay">−${fmt(getExpenseAmount(item))}</div>
+      </button>`;
+    }).join('');
+    const emptyHtml = (!dayRows.length && !dayExpenses.length)
+      ? `<button class="cal-list-empty-day" onclick="event.stopPropagation();openDaySheet('${date}')">＋ ${t.cal_newShift || 'Add shift'}</button>`
+      : '';
 
     html += `<div class="cal-list-group${isSelected ? ' selected' : ''}">
       <button class="${dayClass}" onclick="selectCalListDate('${date}', true)">
@@ -587,7 +674,7 @@ function renderCalList() {
         <div class="dot"></div>
       </button>
       <div class="cal-list-track">
-        ${shiftHtml}
+        ${shiftHtml}${expenseHtml}${emptyHtml}
       </div>
     </div>`;
   }
@@ -609,10 +696,11 @@ function renderCalDayPanel() {
   if (!calSelectedDate) { dateLbl.textContent = ''; panel.innerHTML = ''; return; }
 
   const dStr = formatYmdWithDow(calSelectedDate);
-  dateLbl.textContent = (t.cal_panelTit || 'Shifts on {d}').replace('{d}', dStr);
+  dateLbl.textContent = (t.cal_panelTitAll || t.cal_panelTit || 'Shifts on {d}').replace('{d}', dStr);
 
   const dayShifts = shifts.filter(s => s.date === calSelectedDate);
-  const rows = dayShifts.map(s => {
+  const dayExpenses = expenses.filter(item => item.date === calSelectedDate);
+  const shiftRows = dayShifts.map(s => {
     const j = getShiftJobMeta(s);
     const time = s.start
       ? `${s.start}<br>${s.end}`
@@ -633,8 +721,29 @@ function renderCalDayPanel() {
     </div>`;
   }).join('');
 
-  const addBtn = `<button class="panel-add-btn" onclick="openDaySheet('${calSelectedDate}')">＋ ${t.cal_newShift || 'Add shift'}</button>`;
-  panel.innerHTML = rows + addBtn;
+  const expenseRows = dayExpenses.map(item => {
+    const category = getExpenseCategoryMeta(item);
+    const source = item.source === 'recurring' ? txt('recurringSourceLbl', 'Định kỳ') : txt('expenseLbl', 'Chi tiêu');
+    const sub = item.note ? esc(item.note) : source;
+    return `<div class="swipe-row" data-expense-id="${item.id}">
+      <div class="swipe-row-del" onclick="event.stopPropagation();delExpense(${item.id})">🗑️</div>
+      <div class="swipe-row-inner" onclick="openEditExpense(${item.id})">
+        <div class="panel-shift-row panel-expense-row">
+          <div class="panel-shift-time">—</div>
+          <div class="panel-shift-bar" style="background:${category.color};"></div>
+          <div class="panel-shift-main">
+            <div class="panel-shift-name">${esc(category.icon)} ${esc(category.name)}</div>
+            <div class="panel-shift-sub">${sub}</div>
+          </div>
+          <div class="panel-expense-pay">−${fmt(getExpenseAmount(item))}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const addBtn = `<button class="panel-add-btn" onclick="openDaySheet('${calSelectedDate}')">＋ ${t.cal_newShift || 'Add shift'}</button>
+    <button class="panel-add-btn panel-add-btn--expense" onclick="openExpenseForm('${calSelectedDate}')">＋ ${txt('cal_newExpense', 'Thêm chi tiêu')}</button>`;
+  panel.innerHTML = shiftRows + expenseRows + addBtn;
   attachSwipeHandlers(panel);
 }
 
@@ -1304,6 +1413,7 @@ function selectReportYear(year) {
 }
 
 function renderReport(period) {
+  if (typeof generateDueMonthlyExpenses === 'function') generateDueMonthlyExpenses();
   initReportState();
   clampReportState();
   renderJobFilter();
@@ -1470,6 +1580,8 @@ function renderReport(period) {
     ? getDeductionsForRange(rangeStart, rangeEnd, filterJobId || null)
     : 0;
   const total  = gross + periodMonAlw - periodDed;
+  const expenseTotal = (rangeStart && rangeEnd) ? getExpenseTotalForRange(rangeStart, rangeEnd, null) : 0;
+  const remaining = total - expenseTotal;
   const totalH = filtered.reduce((a, c) => a + (c.hours || 0), 0);
   const totalOt = filtered.reduce((sum, shift) => sum + (shift.otH || 0), 0);
 
@@ -1477,6 +1589,10 @@ function renderReport(period) {
   set('rMainVal', fmt(total));
   setNegClass('rMainVal', total < 0);
   set('rSub', filtered.length + ' ' + t.shiftsUnit + ' · ' + totalH.toFixed(0) + 'h' + (totalOt > 0 ? ' · ' + totalOt.toFixed(0) + 'h OT' : ''));
+  set('rIncomeVal', fmt(total));
+  set('rExpenseVal', expenseTotal > 0 ? '−' + fmt(expenseTotal) : fmt(0));
+  set('rRemainVal', fmt(remaining));
+  setNegClass('rRemainVal', remaining < 0);
   set('chartTit', chartTitle);
   set('chartRangeLbl', rangeLabel);
   set('detTit', detailsTitle);
@@ -1520,6 +1636,10 @@ function renderReport(period) {
   }
 
   document.getElementById('rDetails').innerHTML = detailsHtml;
+  const expenseBreakdownEl = document.getElementById('rExpenseBreakdown');
+  const expenseDetailsEl = document.getElementById('rExpenseDetails');
+  if (expenseBreakdownEl) expenseBreakdownEl.innerHTML = renderExpenseBreakdownDetails(rangeStart, rangeEnd);
+  if (expenseDetailsEl) expenseDetailsEl.innerHTML = renderExpenseDetails(rangeStart, rangeEnd);
 }
 
 function renderReportAlwBreakdown(rangeStart, rangeEnd, gross, alwTotal, dedTotal) {
@@ -1630,6 +1750,10 @@ function goPage(page, el) {
   curPage = page;
   if (page === 'home')     { renderHomeStats(); renderShifts(); }
   if (page === 'report')   { attachReportSwipe(); renderReport(curPeriod); }
-  if (page === 'settings') renderJobCards();
+  if (page === 'settings') {
+    renderJobCards();
+    if (typeof updateExpenseSettingsSummary === 'function') updateExpenseSettingsSummary();
+    if (typeof updateJpPayrollSettingsSummary === 'function') updateJpPayrollSettingsSummary();
+  }
   if (page === 'add')      { renderCalendar(); attachCalendarSwipe(); }
 }

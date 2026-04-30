@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Japan Take-home Estimate Prototype</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Japan Take-home Estimate</h1>
+      <p>Prototype tách rời cho baito, haken và freelancer tại Nhật</p>
+    </div>
+    <div class="version">2026 rules test</div>
+  </header>
+
+  <main class="shell">
+    <section class="panel input-panel" aria-label="Input">
+      <div class="panel-head">
+        <div>
+          <h2>Input thử nghiệm</h2>
+          <p>Không kết nối app chính, không RevenueCat thật, không lưu dữ liệu ngoài máy.</p>
+        </div>
+        <button id="resetBtn" type="button" class="ghost-btn">Reset</button>
+      </div>
+
+      <div class="scenario-row">
+        <button type="button" data-scenario="baito">Baito kokumin</button>
+        <button type="button" data-scenario="haken">Haken Tokyo</button>
+        <button type="button" data-scenario="careAge">Age 45 + manual 住民税</button>
+        <button type="button" data-scenario="freelancer">Freelancer</button>
+      </div>
+
+      <div class="field-grid">
+        <label>
+          Kiểu làm việc
+          <select id="workStyle">
+            <option value="baito">Baito / Arubaito / Part-time</option>
+            <option value="haken">Haken / phái cử</option>
+            <option value="employee">Employee</option>
+            <option value="freelancer">Freelancer / kojin light</option>
+          </select>
+        </label>
+
+        <label>
+          Thu nhập tháng dùng để tính
+          <input id="monthlyGross" type="number" min="0" step="1000">
+        </label>
+
+        <label>
+          Tuổi
+          <input id="age" type="number" min="15" max="90">
+        </label>
+
+        <label>
+          Bảo hiểm
+          <select id="insuranceMode">
+            <option value="shakai">Shakai hoken / 社会保険</option>
+            <option value="kokumin">Kokumin / 国保 + 国民年金</option>
+            <option value="manual">Nhập tay tổng social insurance</option>
+          </select>
+        </label>
+
+        <label id="prefectureWrap">
+          Kyokai Kenpo 支部
+          <select id="prefecture"></select>
+        </label>
+
+        <label>
+          雇用保険
+          <select id="employmentCategory">
+            <option value="general">General 0.5%</option>
+            <option value="agricultureSakeConstruction">Agriculture/sake/construction 0.6%</option>
+            <option value="none">Không tham gia</option>
+          </select>
+        </label>
+
+        <label>
+          源泉所得税
+          <select id="withholdingType">
+            <option value="ko">甲欄 estimate</option>
+            <option value="otsu">乙欄 rough</option>
+            <option value="none">Không khấu trừ</option>
+          </select>
+        </label>
+
+        <label>
+          Thu nhập năm trước cho 住民税
+          <input id="previousAnnualGross" type="number" min="0" step="10000">
+        </label>
+      </div>
+
+      <div id="standardFields" class="subpanel">
+        <h3>標準報酬月額</h3>
+        <div class="field-grid compact">
+          <label>
+            Cách chọn bậc
+            <select id="standardMode">
+              <option value="auto">Auto estimate từ thu nhập tháng</option>
+              <option value="manual">Nhập từ payslip/công ty</option>
+            </select>
+          </label>
+          <label>
+            Manual 標準報酬月額
+            <input id="manualStandardMonthly" type="number" min="0" step="1000">
+          </label>
+        </div>
+      </div>
+
+      <div id="kokuminFields" class="subpanel" hidden>
+        <h3>Kokumin mode</h3>
+        <div class="field-grid compact">
+          <label class="check-row">
+            <input id="includeNationalPension" type="checkbox">
+            <span>Tính quốc dân niên kim FY2026</span>
+          </label>
+          <label>
+            Quốc dân bảo hiểm y tế nhập tay
+            <input id="nationalHealthInsuranceMonthly" type="number" min="0" step="1000">
+          </label>
+        </div>
+      </div>
+
+      <div id="manualFields" class="subpanel" hidden>
+        <h3>Manual social insurance</h3>
+        <label>
+          Tổng social insurance hàng tháng
+          <input id="manualSocialInsuranceMonthly" type="number" min="0" step="1000">
+        </label>
+      </div>
+
+      <div class="subpanel">
+        <h3>Người phụ thuộc</h3>
+        <div class="field-grid compact">
+          <label>
+            Trong Nhật
+            <input id="domesticDependents" type="number" min="0" step="1">
+          </label>
+          <label>
+            Ngoài Nhật
+            <input id="overseasDependents" type="number" min="0" step="1">
+          </label>
+          <label class="check-row wide">
+            <input id="overseasQualified" type="checkbox">
+            <span>Có đủ giấy quan hệ/thực chuyển tiền hoặc điều kiện NTA</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="subpanel">
+        <h3>住民税</h3>
+        <div class="field-grid compact">
+          <label>
+            Mode
+            <select id="residentTaxMode">
+              <option value="off">Không tính</option>
+              <option value="manual">Nhập tay theo 通知書</option>
+              <option value="auto">Auto estimate</option>
+              <option value="hybrid">Hybrid: manual nếu có, không thì estimate</option>
+            </select>
+          </label>
+          <label id="residentManualWrap">
+            Số 住民税/tháng theo notice
+            <input id="residentTaxManualMonthly" type="number" min="0" step="1000">
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel result-panel" aria-label="Result">
+      <div class="summary">
+        <div>
+          <span>Thực nhận estimate</span>
+          <strong id="netAmount">¥0</strong>
+        </div>
+        <div>
+          <span>Gross</span>
+          <strong id="grossAmount">¥0</strong>
+        </div>
+        <div>
+          <span>Khấu trừ</span>
+          <strong id="deductionAmount">¥0</strong>
+        </div>
+        <div>
+          <span>Tỷ lệ trừ</span>
+          <strong id="effectiveRate">0%</strong>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <h2>Breakdown</h2>
+        <div id="deductionRows" class="result-rows"></div>
+      </div>
+
+      <div class="result-section">
+        <h2>Giải thích</h2>
+        <div id="explainBox" class="explain-box"></div>
+      </div>
+
+      <div class="result-section">
+        <h2>Cảnh báo</h2>
+        <div id="warningBox" class="warning-box"></div>
+      </div>
+
+      <div class="result-section">
+        <h2>Nguồn chính thức</h2>
+        <div id="sourceBox" class="source-box"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-note">
+    Prototype này dùng để kiểm tra UX/logic trước khi tích hợp IAP RevenueCat và module production trong app chính.
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

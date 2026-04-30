@@ -45,6 +45,8 @@ function applyLang() {
   set('greetName', userName ? userName + ' 👋' : '👋');
 
   set('todayLbl', t.todayLbl); set('wkLbl', t.wkLbl); set('moLbl', t.moLbl); set('yrLbl', t.yrLbl);
+  set('todayExpenseLbl', txt('todayExpenseLbl', 'Chi hôm nay'));
+  set('todayRemainLbl', txt('todayRemainLbl', 'Còn lại'));
   set('statTit', t.statTit);   set('hrsL', t.hrsL);   set('otL', t.otL);
   set('jobsL', t.jobsL);       set('goalL', t.goalL);
   set('recTit', t.recTit);     set('addTit', t.addTit);
@@ -59,15 +61,27 @@ function applyLang() {
   set('calcLbl', t.calcLbl); set('btnSave', t.btnSave);
   set('shiftMT', editShiftId ? (t.cal_editTit || t.addTit) : (t.addTit || 'Add shift'));
   set('btnDayNewShift', t.cal_newShift || 'New shift');
+  set('btnDayNewExpense', txt('cal_newExpense', 'Thêm chi tiêu'));
 
   set('otBoxTit', t.otBoxTit); set('otToggleLbl', t.otToggleLbl); set('lbl_otamt', t.lbl_otamt);
 
   set('tabW', t.tabW); set('tabM', t.tabM); set('tabQ', t.tabQ); set('tabY', t.tabY);
   set('chartTit', t.chartTit); set('detTit', t.detTit);
+  set('rIncomeLbl', txt('incomeLbl', 'Thu nhập'));
+  set('rExpenseLbl', txt('expenseLbl', 'Chi tiêu'));
+  set('rRemainLbl', txt('remainingLbl', 'Còn lại'));
+  set('rExpenseBreakdownTit', txt('expenseBreakdownTit', 'Chi tiêu theo danh mục'));
+  set('rExpenseDetailsTit', txt('expenseDetailsTit', 'Chi tiết chi tiêu'));
 
   set('sgJobs', t.sgJobs); set('btnAddJob', t.btnAddJob);
+  set('sgExpenses', txt('sgExpenses', 'CHI TIÊU'));
+  set('sExpenseCategories', txt('sExpenseCategories', 'Danh mục chi tiêu'));
+  set('sExpenseCategoriesV', txt('sExpenseCategoriesV', 'Thêm, sửa, xoá'));
+  set('sRecurringExpenses', txt('sRecurringExpenses', 'Chi tiêu định kỳ'));
+  set('sRecurringExpensesV', txt('sRecurringExpensesV', 'Hàng tháng'));
   set('sgApp', t.sgApp); set('sLang', t.sLang); set('sLangV', t.sLangV);
   set('sCur', t.sCur); set('sCurV', getCurLabel());
+  if (typeof applyJpPayrollCopy === 'function') applyJpPayrollCopy();
   set('sGuide', t.sGuide || 'How to use');
   set('sGuideV', t.sGuideV || 'Open step-by-step guide');
   set('sPrivacy', t.sPrivacy || 'Privacy Policy');
@@ -104,20 +118,49 @@ function applyLang() {
   set('lbl_dedTo',    t.lbl_dedTo    || 'To');
   set('btn_addDed',   t.btn_addDed   || '+ Add deduction');
 
+  set('expenseMT', txt('expenseMT_add', 'Thêm chi tiêu'));
+  set('lbl_expense_date', txt('expenseDateLbl', 'Ngày'));
+  set('lbl_expense_amount', txt('expenseAmountLbl', 'Số tiền'));
+  set('lbl_expense_category', txt('expenseCategoryLbl', 'Danh mục'));
+  set('lbl_expense_note', txt('expenseNoteLbl', 'Ghi chú'));
+  set('btnSaveExpense', txt('btnSaveExpense', 'Lưu chi tiêu'));
+  set('expenseCatMT', txt('expenseCatMT', 'Danh mục chi tiêu'));
+  set('expenseCatFormTit', txt('expenseCatFormTit_add', 'Thêm danh mục'));
+  set('lbl_expense_cat_name', txt('expenseCatNameLbl', 'Tên danh mục'));
+  set('btnSaveExpenseCategory', txt('btnSaveExpenseCategory', 'Lưu danh mục'));
+  set('recurringExpenseMT', txt('recurringExpenseMT', 'Chi tiêu định kỳ'));
+  set('recurringExpenseFormTit', txt('recurringExpenseFormTit_add', 'Thêm khoản hàng tháng'));
+  set('lbl_recurring_amount', txt('expenseAmountLbl', 'Số tiền'));
+  set('lbl_recurring_category', txt('expenseCategoryLbl', 'Danh mục'));
+  set('lbl_recurring_day', txt('recurringDayLbl', 'Ngày hàng tháng'));
+  set('lbl_recurring_start', txt('recurringStartLbl', 'Bắt đầu'));
+  set('lbl_recurring_note', txt('expenseNoteLbl', 'Ghi chú'));
+  set('btnSaveRecurringExpense', txt('btnSaveRecurringExpense', 'Lưu định kỳ'));
+
   setPH('inp_jn',   t.phJobName);
   setPH('inp_alwn', t.phAlwName);
   setPH('inp_dedn', t.phDedName);
   setPH('inp_note', t.phNote);
   setPH('ob_name',  t.phObName);
+  setPH('inp_expense_amount', txt('expenseAmountPh', '0'));
+  setPH('inp_expense_note', txt('expenseNotePh', 'VD: Ăn trưa, tiền tàu...'));
+  setPH('inp_expense_cat_name', txt('expenseCatNamePh', 'VD: Ăn uống'));
+  setPH('inp_recurring_amount', txt('expenseAmountPh', '0'));
+  setPH('inp_recurring_note', txt('recurringNotePh', 'VD: Tiền nhà, điện thoại...'));
 
   syncDateDisplay('inp_date', 'disp_date');
   syncDateDisplay('inp_date_end', 'disp_date_end');
   syncDateDisplay('inp_date_daily', 'disp_date_daily');
+  syncDateDisplay('inp_expense_date', 'disp_expense_date');
+  syncDateDisplay('inp_recurring_start', 'disp_recurring_start');
 
   renderHomeStats();
   renderShifts();
   if (curPage === 'report')   renderReport(curPeriod);
-  if (curPage === 'settings') renderJobCards();
+  if (curPage === 'settings') {
+    renderJobCards();
+    updateExpenseSettingsSummary();
+  }
   renderCalendar();
   updateRateLabel();
 }
@@ -248,6 +291,7 @@ function openDaySheet(date) {
   const dStr = formatYmdWithDow(_daySheetDate);
   set('daySheetTit', (t.cal_addFor || 'Add shift for {d}').replace('{d}', dStr));
   set('btnDayNewShift', t.cal_newShift || 'New shift');
+  set('btnDayNewExpense', txt('cal_newExpense', 'Thêm chi tiêu'));
   renderDaySheetTemplates();
   document.getElementById('moDay').classList.add('show');
 }
@@ -431,6 +475,404 @@ function openEditShift(id) {
   document.getElementById('moShift').classList.add('show');
 }
 
+/* -------- Expense form, categories, monthly recurring -------- */
+
+function updateExpenseSettingsSummary() {
+  set('sExpenseCategoriesV', expenseCategories.length + ' ' + txt('expenseCategoriesUnit', 'danh mục'));
+  set('sRecurringExpensesV', recurringExpenses.length + ' ' + txt('monthlyItemsUnit', 'khoản hàng tháng'));
+}
+
+function refreshFinanceViews() {
+  renderCalendar();
+  renderHomeStats();
+  if (curPage === 'report') renderReport(curPeriod);
+  if (curPage === 'settings') {
+    renderJobCards();
+    updateExpenseSettingsSummary();
+  }
+}
+
+function fillExpenseCategorySelect(selectId, selectedId) {
+  if (typeof ensureFinanceData === 'function') ensureFinanceData();
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = expenseCategories.map(category =>
+    `<option value="${category.id}">${esc(category.icon)} ${esc(getExpenseCategoryDisplayName(category))}</option>`
+  ).join('');
+  const target = selectedId || (expenseCategories[0] && expenseCategories[0].id);
+  if (target) sel.value = String(target);
+}
+
+function openExpenseForm(date) {
+  closeDaySheet();
+  if (typeof ensureFinanceData === 'function') ensureFinanceData();
+  editExpenseId = null;
+  const t = L[curLang] || {};
+  set('expenseMT', txt('expenseMT_add', 'Thêm chi tiêu'));
+  const editInput = document.getElementById('editExpenseId');
+  if (editInput) editInput.value = '';
+  const targetDate = date || _daySheetDate || calSelectedDate || localYmd();
+  const dateInput = document.getElementById('inp_expense_date');
+  if (dateInput) dateInput.value = targetDate;
+  const amountInput = document.getElementById('inp_expense_amount');
+  if (amountInput) amountInput.value = '';
+  const noteInput = document.getElementById('inp_expense_note');
+  if (noteInput) noteInput.value = '';
+  fillExpenseCategorySelect('inp_expense_category');
+  syncDateDisplay('inp_expense_date', 'disp_expense_date');
+  set('btnSaveExpense', t.btnSaveExpense || txt('btnSaveExpense', 'Lưu chi tiêu'));
+  document.getElementById('moExpense').classList.add('show');
+}
+
+function closeExpenseForm() {
+  document.getElementById('moExpense').classList.remove('show');
+  editExpenseId = null;
+}
+
+function openEditExpense(id) {
+  const expense = expenses.find(item => item.id === id);
+  if (!expense) return;
+  editExpenseId = id;
+  const editInput = document.getElementById('editExpenseId');
+  if (editInput) editInput.value = String(id);
+  set('expenseMT', txt('expenseMT_edit', 'Sửa chi tiêu'));
+  const dateInput = document.getElementById('inp_expense_date');
+  if (dateInput) dateInput.value = expense.date || localYmd();
+  const amountInput = document.getElementById('inp_expense_amount');
+  if (amountInput) amountInput.value = String(getExpenseAmount(expense) || '');
+  const noteInput = document.getElementById('inp_expense_note');
+  if (noteInput) noteInput.value = expense.note || '';
+  fillExpenseCategorySelect('inp_expense_category', expense.categoryId);
+  syncDateDisplay('inp_expense_date', 'disp_expense_date');
+  document.getElementById('moExpense').classList.add('show');
+}
+
+function saveExpense() {
+  const t = L[curLang] || {};
+  const editId = parseInt(document.getElementById('editExpenseId').value, 10) || 0;
+  const date = document.getElementById('inp_expense_date').value || localYmd();
+  const amount = Math.round(Number(document.getElementById('inp_expense_amount').value) || 0);
+  const categoryId = parseInt(document.getElementById('inp_expense_category').value, 10) || 0;
+  const category = getExpenseCategory(categoryId) || getFirstExpenseCategory();
+  const note = (document.getElementById('inp_expense_note').value || '').trim();
+
+  if (!amount || amount <= 0 || !category) {
+    toast(t.expenseInvalid || txt('expenseInvalid', 'Nhập số tiền và danh mục hợp lệ'));
+    return;
+  }
+
+  const existing = editId ? expenses.find(item => item.id === editId) : null;
+  const expense = existing || {
+    id: nextExpenseId++,
+    source: 'manual',
+    createdAt: Date.now()
+  };
+  expense.date = date;
+  expense.amount = amount;
+  expense.note = note;
+  captureExpenseCategoryMeta(expense, category);
+  if (!existing) expenses.push(expense);
+
+  closeExpenseForm();
+  save({ toast: true });
+  hapticMedium();
+  calSelectedDate = date;
+  calCursor = date.slice(0, 7);
+  refreshFinanceViews();
+}
+
+async function delExpense(id) {
+  const msg = txt('confirmDelExpense', 'Xoá khoản chi này?');
+  if (!(await confirmDialog(msg))) return;
+  const idx = expenses.findIndex(item => item.id === id);
+  if (idx < 0) return;
+  const removed = expenses[idx];
+  expenses.splice(idx, 1);
+  save();
+  hapticMedium();
+  refreshFinanceViews();
+  const undoLbl = txt('undoLbl', 'Undo');
+  toast('🗑️ ' + txt('deletedLbl', 'Deleted') + ' · ' + undoLbl, {
+    duration: 5000,
+    onClick: () => {
+      expenses.splice(idx, 0, removed);
+      save();
+      refreshFinanceViews();
+    }
+  });
+}
+
+function openExpenseCategoriesModal() {
+  if (typeof ensureFinanceData === 'function') ensureFinanceData();
+  set('expenseCatMT', txt('expenseCatMT', 'Danh mục chi tiêu'));
+  resetExpenseCategoryForm();
+  renderExpenseCategoryList();
+  document.getElementById('moExpenseCategories').classList.add('show');
+}
+
+function closeExpenseCategoriesModal() {
+  document.getElementById('moExpenseCategories').classList.remove('show');
+  editExpenseCategoryId = null;
+}
+
+function resetExpenseCategoryForm() {
+  editExpenseCategoryId = null;
+  const editInput = document.getElementById('editExpenseCategoryId');
+  if (editInput) editInput.value = '';
+  const nameInput = document.getElementById('inp_expense_cat_name');
+  if (nameInput) nameInput.value = '';
+  pickedExpenseCategoryIcon = '🍽️';
+  pickedExpenseCategoryColor = '#ef4444';
+  set('expenseCatFormTit', txt('expenseCatFormTit_add', 'Thêm danh mục'));
+  refreshExpenseCategoryPickers();
+}
+
+function refreshExpenseCategoryPickers() {
+  document.querySelectorAll('#expenseIconPicker span').forEach(el => {
+    el.classList.toggle('selected', el.dataset.icon === pickedExpenseCategoryIcon);
+  });
+  document.querySelectorAll('#expenseColorPicker .color-swatch').forEach(el => {
+    el.classList.toggle('selected', el.dataset.color === pickedExpenseCategoryColor);
+  });
+}
+
+function renderExpenseCategoryList() {
+  const el = document.getElementById('expenseCategoryList');
+  if (!el) return;
+  if (!expenseCategories.length) {
+    el.innerHTML = `<div class="recent-empty">${txt('noExpenseCategories', 'Chưa có danh mục')}</div>`;
+    return;
+  }
+  el.innerHTML = expenseCategories.map(category => {
+    const used = expenses.filter(item => item.categoryId === category.id).length;
+    const categoryName = getExpenseCategoryDisplayName(category);
+    return `<div class="expense-row">
+      <div class="expense-row-icon" style="background:${category.color};">${esc(category.icon)}</div>
+      <div class="expense-row-main">
+        <div class="expense-row-title">${esc(categoryName)}</div>
+        <div class="expense-row-sub">${used} ${txt('expensesUnit', 'khoản chi')}</div>
+      </div>
+      <div class="expense-row-actions">
+        <button class="icon-btn" onclick="editExpenseCategory(${category.id})">✏️</button>
+        <button class="icon-btn" onclick="deleteExpenseCategory(${category.id})" style="color:var(--red);">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editExpenseCategory(id) {
+  const category = getExpenseCategory(id);
+  if (!category) return;
+  editExpenseCategoryId = id;
+  const editInput = document.getElementById('editExpenseCategoryId');
+  if (editInput) editInput.value = String(id);
+  const nameInput = document.getElementById('inp_expense_cat_name');
+  if (nameInput) nameInput.value = getExpenseCategoryDisplayName(category);
+  pickedExpenseCategoryIcon = category.icon;
+  pickedExpenseCategoryColor = category.color;
+  set('expenseCatFormTit', txt('expenseCatFormTit_edit', 'Sửa danh mục'));
+  refreshExpenseCategoryPickers();
+}
+
+function selExpenseCategoryIcon(el) {
+  pickedExpenseCategoryIcon = el.dataset.icon;
+  refreshExpenseCategoryPickers();
+}
+
+function selExpenseCategoryColor(el) {
+  pickedExpenseCategoryColor = el.dataset.color;
+  refreshExpenseCategoryPickers();
+}
+
+function saveExpenseCategory() {
+  const t = L[curLang] || {};
+  const editId = parseInt(document.getElementById('editExpenseCategoryId').value, 10) || 0;
+  const name = (document.getElementById('inp_expense_cat_name').value || '').trim();
+  if (!name) {
+    toast(t.expenseCategoryInvalid || txt('expenseCategoryInvalid', 'Nhập tên danh mục'));
+    return;
+  }
+
+  let category = editId ? getExpenseCategory(editId) : null;
+  if (category) {
+    category.name = name;
+    category.icon = pickedExpenseCategoryIcon;
+    category.color = pickedExpenseCategoryColor;
+    category.userModified = !(category.key && isDefaultExpenseCategoryName(category.key, name));
+  } else {
+    category = {
+      id: nextExpenseCategoryId++,
+      name,
+      icon: pickedExpenseCategoryIcon,
+      color: pickedExpenseCategoryColor,
+      userModified: true,
+      createdAt: Date.now()
+    };
+    expenseCategories.push(category);
+  }
+
+  expenses.forEach(item => {
+    if (item.categoryId === category.id) captureExpenseCategoryMeta(item, category);
+  });
+  save({ toast: true });
+  hapticLight();
+  resetExpenseCategoryForm();
+  renderExpenseCategoryList();
+  fillExpenseCategorySelect('inp_expense_category');
+  fillExpenseCategorySelect('inp_recurring_category');
+  refreshFinanceViews();
+}
+
+async function deleteExpenseCategory(id) {
+  const category = getExpenseCategory(id);
+  if (!category) return;
+  if (expenseCategories.length <= 1) {
+    toast(txt('expenseCategoryMin', 'Cần ít nhất một danh mục'));
+    return;
+  }
+  const msg = txt('confirmDelExpenseCategory', 'Xoá danh mục này? Các khoản chi sẽ chuyển sang danh mục khác.');
+  if (!(await confirmDialog(msg))) return;
+  const fallback = expenseCategories.find(item => item.id !== id && item.key === 'other') ||
+    expenseCategories.find(item => item.id !== id);
+  if (!fallback) return;
+
+  expenses.forEach(item => {
+    if (item.categoryId === id) captureExpenseCategoryMeta(item, fallback);
+  });
+  recurringExpenses.forEach(item => {
+    if (item.categoryId === id) item.categoryId = fallback.id;
+  });
+  expenseCategories = expenseCategories.filter(item => item.id !== id);
+  save();
+  hapticMedium();
+  resetExpenseCategoryForm();
+  renderExpenseCategoryList();
+  refreshFinanceViews();
+}
+
+function openRecurringExpensesModal() {
+  if (typeof ensureFinanceData === 'function') ensureFinanceData();
+  generateDueMonthlyExpenses();
+  set('recurringExpenseMT', txt('recurringExpenseMT', 'Chi tiêu định kỳ'));
+  resetRecurringExpenseForm();
+  renderRecurringExpenseList();
+  document.getElementById('moRecurringExpenses').classList.add('show');
+}
+
+function closeRecurringExpensesModal() {
+  document.getElementById('moRecurringExpenses').classList.remove('show');
+  editRecurringExpenseId = null;
+}
+
+function resetRecurringExpenseForm() {
+  editRecurringExpenseId = null;
+  const editInput = document.getElementById('editRecurringExpenseId');
+  if (editInput) editInput.value = '';
+  const amountInput = document.getElementById('inp_recurring_amount');
+  if (amountInput) amountInput.value = '';
+  const dayInput = document.getElementById('inp_recurring_day');
+  if (dayInput) dayInput.value = String(new Date().getDate());
+  const startInput = document.getElementById('inp_recurring_start');
+  if (startInput) startInput.value = localYmd();
+  const noteInput = document.getElementById('inp_recurring_note');
+  if (noteInput) noteInput.value = '';
+  fillExpenseCategorySelect('inp_recurring_category');
+  syncDateDisplay('inp_recurring_start', 'disp_recurring_start');
+  set('recurringExpenseFormTit', txt('recurringExpenseFormTit_add', 'Thêm khoản hàng tháng'));
+}
+
+function renderRecurringExpenseList() {
+  const el = document.getElementById('recurringExpenseList');
+  if (!el) return;
+  if (!recurringExpenses.length) {
+    el.innerHTML = `<div class="recent-empty">${txt('noRecurringExpenses', 'Chưa có khoản định kỳ')}</div>`;
+    return;
+  }
+  el.innerHTML = recurringExpenses.map(item => {
+    const category = getExpenseCategory(item.categoryId) || getOtherExpenseCategory();
+    const categoryName = getExpenseCategoryDisplayName(category);
+    const activeText = item.active === false ? txt('pausedLbl', 'Tạm dừng') : txt('monthlyLbl', 'Hàng tháng');
+    return `<div class="recurring-row">
+      <div class="recurring-row-icon" style="background:${category.color};">${esc(category.icon)}</div>
+      <div class="recurring-row-main">
+        <div class="recurring-row-title">${fmt(item.amount)} · ${esc(categoryName)}</div>
+        <div class="recurring-row-sub">${activeText} · ${txt('dayOfMonthShort', 'ngày')} ${item.dayOfMonth}${item.note ? ' · ' + esc(item.note) : ''}</div>
+      </div>
+      <div class="recurring-row-actions">
+        <button class="icon-btn" onclick="editRecurringExpense(${item.id})">✏️</button>
+        <button class="icon-btn" onclick="deleteRecurringExpense(${item.id})" style="color:var(--red);">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editRecurringExpense(id) {
+  const item = recurringExpenses.find(x => x.id === id);
+  if (!item) return;
+  editRecurringExpenseId = id;
+  const editInput = document.getElementById('editRecurringExpenseId');
+  if (editInput) editInput.value = String(id);
+  document.getElementById('inp_recurring_amount').value = String(item.amount || '');
+  document.getElementById('inp_recurring_day').value = String(item.dayOfMonth || 1);
+  document.getElementById('inp_recurring_start').value = item.startDate || localYmd();
+  document.getElementById('inp_recurring_note').value = item.note || '';
+  fillExpenseCategorySelect('inp_recurring_category', item.categoryId);
+  syncDateDisplay('inp_recurring_start', 'disp_recurring_start');
+  set('recurringExpenseFormTit', txt('recurringExpenseFormTit_edit', 'Sửa khoản hàng tháng'));
+}
+
+function saveRecurringExpense() {
+  const amount = Math.round(Number(document.getElementById('inp_recurring_amount').value) || 0);
+  const categoryId = parseInt(document.getElementById('inp_recurring_category').value, 10) || 0;
+  const category = getExpenseCategory(categoryId) || getFirstExpenseCategory();
+  const dayOfMonth = Math.min(31, Math.max(1, parseInt(document.getElementById('inp_recurring_day').value, 10) || 1));
+  const startDate = document.getElementById('inp_recurring_start').value || localYmd();
+  const note = (document.getElementById('inp_recurring_note').value || '').trim();
+  const editId = parseInt(document.getElementById('editRecurringExpenseId').value, 10) || 0;
+
+  if (!amount || amount <= 0 || !category) {
+    toast(txt('expenseInvalid', 'Nhập số tiền và danh mục hợp lệ'));
+    return;
+  }
+
+  const existing = editId ? recurringExpenses.find(item => item.id === editId) : null;
+  const data = {
+    amount,
+    categoryId: category.id,
+    dayOfMonth,
+    startDate,
+    note,
+    active: true
+  };
+  if (existing) {
+    Object.assign(existing, data);
+  } else {
+    recurringExpenses.push({
+      id: nextRecurringExpenseId++,
+      createdAt: Date.now(),
+      ...data
+    });
+  }
+
+  generateDueMonthlyExpenses();
+  save({ toast: true });
+  hapticMedium();
+  resetRecurringExpenseForm();
+  renderRecurringExpenseList();
+  refreshFinanceViews();
+}
+
+async function deleteRecurringExpense(id) {
+  const msg = txt('confirmDelRecurringExpense', 'Xoá khoản định kỳ này? Các khoản đã sinh vẫn được giữ lại.');
+  if (!(await confirmDialog(msg))) return;
+  recurringExpenses = recurringExpenses.filter(item => item.id !== id);
+  save();
+  hapticMedium();
+  resetRecurringExpenseForm();
+  renderRecurringExpenseList();
+  refreshFinanceViews();
+}
+
 /* -------- Currency -------- */
 
 function openCurModal() {
@@ -530,6 +972,10 @@ async function exportCSV() {
   const alwTotal = getMonthlyAllowanceForRange(fromYmd, toYmd, null);
   const dedTotal = getDeductionsForRange(fromYmd, toYmd, null);
   const net = gross + alwTotal - dedTotal;
+  const sortedExpenses = getExpensesForRange(fromYmd, toYmd, null)
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0));
+  const expenseTotal = sortedExpenses.reduce((sum, item) => sum + getExpenseAmount(item), 0);
+  const remaining = net - expenseTotal;
 
   rows.push([]);
   rows.push([(t.bdTitlePeriod || 'Period breakdown') + ' ' + fromYmd + ' -> ' + toYmd]);
@@ -551,6 +997,18 @@ async function exportCSV() {
   if (dedTotal > 0) rows.push([t.bdDed || 'Deductions', '', '', '', '', '', t.pdfTotal || 'Total', -dedTotal, '']);
 
   rows.push([t.bdNet || t.bdTotal || 'Net', '', '', '', '', '', '', net, '']);
+  if (expenseTotal > 0) rows.push([txt('expenseLbl', 'Chi tiêu'), '', '', '', '', '', '', -expenseTotal, '']);
+  rows.push([txt('remainingLbl', 'Còn lại'), '', '', '', '', '', '', remaining, '']);
+
+  if (sortedExpenses.length) {
+    rows.push([]);
+    rows.push([txt('expenseDetailsTit', 'Chi tiết chi tiêu')]);
+    rows.push([t.pdfDate, txt('expenseCategoryLbl', 'Danh mục'), '', '', '', '', '', txt('expenseAmountLbl', 'Số tiền') + '(' + sym + ')', t.pdfNote]);
+    sortedExpenses.forEach(item => {
+      const category = getExpenseCategoryMeta(item);
+      rows.push([item.date, category.name, '', '', '', '', '', -getExpenseAmount(item), item.note || '']);
+    });
+  }
   const csv = '\uFEFF' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
   const fileName = 'salary-tracker-' + localYmd() + '.csv';
 
@@ -579,6 +1037,10 @@ async function exportPDF() {
   const alwTotal = getMonthlyAllowanceForRange(fromYmd, toYmd, null);
   const dedTotal = getDeductionsForRange(fromYmd, toYmd, null);
   const net = gross + alwTotal - dedTotal;
+  const sortedExpenses = getExpensesForRange(fromYmd, toYmd, null)
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0));
+  const expenseTotal = sortedExpenses.reduce((sum, item) => sum + getExpenseAmount(item), 0);
+  const remaining = net - expenseTotal;
 
   const alwBreakdown = getMonthlyAllowanceBreakdown(fromYmd, toYmd, null);
   const dedBreakdown = getDeductionsBreakdown(fromYmd, toYmd, null);
@@ -615,6 +1077,8 @@ async function exportPDF() {
   const bdAlwLbl   = t.bdAlwMonth || 'Monthly allowance';
   const bdDedLbl   = t.bdDed || 'Deductions';
   const bdNetLbl   = t.bdNet || t.bdTotal || 'Net';
+  const expenseLbl = txt('expenseLbl', 'Chi tiêu');
+  const remainingLbl = txt('remainingLbl', 'Còn lại');
 
   const summarySection = `
     <div style="margin-bottom:18px;padding:14px 16px;background:#f0f4ff;border-radius:10px;font-size:14px;">
@@ -623,6 +1087,8 @@ async function exportPDF() {
       ${alwTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#16a34a;"><span>${esc(bdAlwLbl)}</span><span style="font-weight:600;">+${sym}${fmtNumber(alwTotal)}</span></div>` : ''}
       ${dedTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#ef4444;"><span>${esc(bdDedLbl)}</span><span style="font-weight:600;">−${sym}${fmtNumber(dedTotal)}</span></div>` : ''}
       <div style="display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px dashed #d1d5db;margin-top:6px;font-size:15px;font-weight:700;color:#1a2f5e;"><span>${esc(bdNetLbl)}</span><span>${sym}${fmtNumber(net)}</span></div>
+      ${expenseTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#ef4444;"><span>${esc(expenseLbl)}</span><span style="font-weight:600;">−${sym}${fmtNumber(expenseTotal)}</span></div>` : ''}
+      <div style="display:flex;justify-content:space-between;padding:8px 0 0;border-top:1px dashed #d1d5db;margin-top:6px;font-size:15px;font-weight:700;color:${remaining < 0 ? '#ef4444' : '#1a2f5e'};"><span>${esc(remainingLbl)}</span><span>${sym}${fmtNumber(remaining)}</span></div>
     </div>`;
 
   const detailTables = (alwDetail || dedDetail) ? `
@@ -648,6 +1114,32 @@ async function exportPDF() {
       </table>` : ''}
   ` : '';
 
+  const expenseRows = sortedExpenses.map(item => {
+    const category = getExpenseCategoryMeta(item);
+    return `<tr>
+      <td>${item.date}</td>
+      <td>${esc(category.icon)} ${esc(category.name)}</td>
+      <td>${esc(item.note || '')}</td>
+      <td style="text-align:right;color:#ef4444;font-weight:600;">−${sym}${fmtNumber(getExpenseAmount(item))}</td>
+    </tr>`;
+  }).join('');
+
+  const expenseTable = expenseRows ? `
+    <h3 style="color:#ef4444;font-size:14px;margin:16px 0 6px;">${esc(txt('expenseDetailsTit', 'Chi tiết chi tiêu'))}</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;">
+      <thead><tr style="background:#fee2e2;color:#991b1b;">
+        <th style="padding:6px 8px;text-align:left;">${esc(t.pdfDate)}</th>
+        <th style="padding:6px 8px;text-align:left;">${esc(txt('expenseCategoryLbl', 'Danh mục'))}</th>
+        <th style="padding:6px 8px;text-align:left;">${esc(t.pdfNote)}</th>
+        <th style="padding:6px 8px;text-align:right;">${esc(txt('expenseAmountLbl', 'Số tiền'))}</th>
+      </tr></thead>
+      <tbody>${expenseRows}</tbody>
+      <tfoot><tr style="background:#fff1f2;font-weight:700;">
+        <td colspan="3" style="padding:8px;">${esc(t.pdfTotal)}</td>
+        <td style="text-align:right;color:#ef4444;">−${sym}${fmtNumber(expenseTotal)}</td>
+      </tr></tfoot>
+    </table>` : '';
+
   const reportBody = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:900px;margin:0 auto;">
       <h2 style="color:#1a2f5e;margin-bottom:4px;">💴 Salary Tracker — ${esc(userName || '')}</h2>
@@ -655,6 +1147,7 @@ async function exportPDF() {
 
       ${summarySection}
       ${detailTables}
+      ${expenseTable}
 
       <h3 style="color:#1a2f5e;font-size:14px;margin:16px 0 6px;">${esc(t.pdfShiftsTit || 'Shifts')}</h3>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -1035,6 +1528,7 @@ function selectProfile(id) {
   curLang  = p.lang || curLang;
   saveProfiles();
   loadProfileData();
+  if (typeof generateDueMonthlyExpenses === 'function') generateDueMonthlyExpenses();
   closeProfilesModal();
   fillJobSel();
   applyLang();

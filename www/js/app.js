@@ -22,6 +22,7 @@ async function setupNativeChrome() {
 function init() {
   loadProfiles();
   loadProfileData();
+  if (typeof generateDueMonthlyExpenses === 'function') generateDueMonthlyExpenses();
   const today = localYmd();
   const inpDate = document.getElementById('inp_date');
   if (inpDate) inpDate.value = today;
@@ -33,6 +34,9 @@ function init() {
   renderShifts();
   renderCalendar();
   checkOnboarding();
+  if (typeof initPurchases === 'function') initPurchases().then(() => {
+    if (typeof applyJpPayrollCopy === 'function') applyJpPayrollCopy();
+  });
   setupNativeChrome();
 }
 

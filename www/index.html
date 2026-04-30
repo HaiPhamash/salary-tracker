@@ -40,10 +40,14 @@
         <div class="balance-label"  id="todayLbl">Thu nhập hôm nay</div>
         <div class="balance-amount" id="todayAmt">¥23,763</div>
         <div class="balance-sub"    id="todaySub">2 ca • 1 ngày lễ OT</div>
+        <div class="balance-cash-row">
+          <div><span id="todayExpenseLbl">Chi hôm nay</span><strong id="todayExpenseAmt">¥0</strong></div>
+          <div><span id="todayRemainLbl">Còn lại</span><strong id="todayRemainAmt">¥0</strong></div>
+        </div>
         <div class="balance-row">
-          <div class="balance-mini"><div class="label" id="wkLbl">Tuần này</div><div class="value" id="wkAmt">¥82,000</div></div>
-          <div class="balance-mini"><div class="label" id="moLbl">Tháng này</div><div class="value" id="moAmt">¥310,500</div></div>
-          <div class="balance-mini"><div class="label" id="yrLbl">Năm nay</div><div class="value" id="yrAmt">¥2.6M</div></div>
+          <div class="balance-mini"><div class="label" id="wkLbl">Tuần này</div><div class="value" id="wkAmt">¥82,000</div><div class="sub" id="wkCashSub">Chi ¥0</div></div>
+          <div class="balance-mini"><div class="label" id="moLbl">Tháng này</div><div class="value" id="moAmt">¥310,500</div><div class="sub" id="moCashSub">Chi ¥0</div></div>
+          <div class="balance-mini"><div class="label" id="yrLbl">Năm nay</div><div class="value" id="yrAmt">¥2.6M</div><div class="sub" id="yrCashSub">Chi ¥0</div></div>
         </div>
       </div>
 
@@ -103,6 +107,12 @@
         <div class="sub"   id="rSub">0 ca</div>
       </div>
 
+      <div class="report-cash-cards" id="reportCashCards">
+        <div><span id="rIncomeLbl">Thu nhập</span><strong id="rIncomeVal">¥0</strong></div>
+        <div><span id="rExpenseLbl">Chi tiêu</span><strong id="rExpenseVal" class="is-expense">¥0</strong></div>
+        <div><span id="rRemainLbl">Còn lại</span><strong id="rRemainVal">¥0</strong></div>
+      </div>
+
       <div class="report-breakdown" id="reportAlwBreakdown" style="display:none;"></div>
 
       <div class="report-motion" id="reportMotion">
@@ -126,6 +136,14 @@
         <h3 id="detTit">Chi tiết</h3>
         <div id="rDetails"></div>
       </div>
+      <div class="form-card report-expense-card">
+        <h3 id="rExpenseBreakdownTit">Chi tiêu theo danh mục</h3>
+        <div id="rExpenseBreakdown"></div>
+      </div>
+      <div class="form-card report-expense-card">
+        <h3 id="rExpenseDetailsTit">Chi tiết chi tiêu</h3>
+        <div id="rExpenseDetails"></div>
+      </div>
       <div style="height:20px;"></div>
     </section>
 
@@ -134,6 +152,20 @@
       <div class="section-title" id="sgJobs">QUẢN LÝ CÔNG VIỆC</div>
       <div id="jobCardList"></div>
       <button class="btn btn--accent" onclick="openAddJob()" id="btnAddJob" style="margin-bottom:16px;">➕ Thêm công việc mới</button>
+
+      <div class="settings-group">
+        <div class="settings-group-title" id="sgExpenses">CHI TIÊU</div>
+        <div class="settings-row" onclick="openExpenseCategoriesModal()">
+          <div class="settings-icon">🏷️</div>
+          <div class="settings-info"><div class="settings-name" id="sExpenseCategories">Danh mục chi tiêu</div><div class="settings-value" id="sExpenseCategoriesV">Thêm, sửa, xoá</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openRecurringExpensesModal()">
+          <div class="settings-icon">🔁</div>
+          <div class="settings-info"><div class="settings-name" id="sRecurringExpenses">Chi tiêu định kỳ</div><div class="settings-value" id="sRecurringExpensesV">Hàng tháng</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+      </div>
 
       <div class="settings-group">
         <div class="settings-group-title" id="sgApp">ỨNG DỤNG</div>
@@ -145,6 +177,11 @@
         <div class="settings-row" onclick="openCurModal()">
           <div class="settings-icon">💱</div>
           <div class="settings-info"><div class="settings-name" id="sCur">Đơn vị tiền tệ</div><div class="settings-value" id="sCurV">JPY (¥)</div></div>
+          <div class="settings-arrow">›</div>
+        </div>
+        <div class="settings-row" onclick="openJpPayrollModal()">
+          <div class="settings-icon">🇯🇵</div>
+          <div class="settings-info"><div class="settings-name" id="sJpPayroll">Japan Take-home Plus</div><div class="settings-value" id="sJpPayrollV">Pro estimate cho Nhật</div></div>
           <div class="settings-arrow">›</div>
         </div>
         <div class="settings-row" onclick="openGuideModal()">
@@ -215,6 +252,7 @@
       <div class="day-sheet-hist-lbl" id="daySheetHistLbl" style="display:none;">Thêm từ lịch sử</div>
       <div id="daySheetTemplates"></div>
       <button class="btn" onclick="openShiftForm()" id="btnDayNewShift" style="margin-top:14px;">Nhập ca mới</button>
+      <button class="btn btn--expense" onclick="openExpenseForm()" id="btnDayNewExpense" style="margin-top:10px;">Thêm chi tiêu</button>
       <div style="height:6px;"></div>
     </div>
   </div>
@@ -284,6 +322,40 @@
       </div>
 
       <button class="btn" onclick="addShift()" id="btnSave" style="margin-top:14px;">💾 Lưu ca làm việc</button>
+      <div style="height:6px;"></div>
+    </div>
+  </div>
+
+  <!-- Expense form -->
+  <div class="modal" id="moExpense" onclick="if(event.target===this)closeExpenseForm()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="expenseMT">Thêm chi tiêu</div>
+      <input type="hidden" id="editExpenseId">
+
+      <div class="dt-group">
+        <div class="dt-row">
+          <span class="dt-label" id="lbl_expense_date">Ngày</span>
+          <div class="dt-pill" onclick="openDatePicker('inp_expense_date','disp_expense_date')"><span class="dt-display" id="disp_expense_date"></span><input type="hidden" id="inp_expense_date"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label id="lbl_expense_amount">Số tiền</label>
+        <input type="number" id="inp_expense_amount" min="0" step="1" placeholder="0">
+      </div>
+
+      <div class="form-group">
+        <label id="lbl_expense_category">Danh mục</label>
+        <select id="inp_expense_category"></select>
+      </div>
+
+      <div class="form-group">
+        <label id="lbl_expense_note">Ghi chú</label>
+        <input type="text" id="inp_expense_note" placeholder="VD: Ăn trưa, tiền tàu...">
+      </div>
+
+      <button class="btn btn--expense" onclick="saveExpense()" id="btnSaveExpense" style="margin-top:14px;">Lưu chi tiêu</button>
       <div style="height:6px;"></div>
     </div>
   </div>
@@ -368,6 +440,232 @@
       <div class="modal-handle"></div>
       <div class="modal-title" id="delProfileMT">Xoá người dùng</div>
       <div id="delProfileList"></div>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Expense categories -->
+  <div class="modal" id="moExpenseCategories" onclick="if(event.target===this)closeExpenseCategoriesModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="expenseCatMT">Danh mục chi tiêu</div>
+      <div id="expenseCategoryList"></div>
+      <input type="hidden" id="editExpenseCategoryId">
+      <div class="section-divider" id="expenseCatFormTit">Thêm danh mục</div>
+      <div class="form-group">
+        <label id="lbl_expense_cat_name">Tên danh mục</label>
+        <input type="text" id="inp_expense_cat_name" placeholder="VD: Ăn uống">
+      </div>
+      <div class="expense-icon-picker" id="expenseIconPicker">
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🍽️">🍽️</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🚆">🚆</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🏠">🏠</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🛒">🛒</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🏥">🏥</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="📚">📚</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="🎮">🎮</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="👪">👪</span>
+        <span onclick="selExpenseCategoryIcon(this)" data-icon="📌">📌</span>
+      </div>
+      <div class="color-swatches" id="expenseColorPicker">
+        <div class="color-swatch selected" style="background:#ef4444;" data-color="#ef4444" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#2563eb;" data-color="#2563eb" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#0f766e;" data-color="#0f766e" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#d97706;" data-color="#d97706" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#db2777;" data-color="#db2777" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#7c3aed;" data-color="#7c3aed" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#0891b2;" data-color="#0891b2" onclick="selExpenseCategoryColor(this)"></div>
+        <div class="color-swatch"          style="background:#64748b;" data-color="#64748b" onclick="selExpenseCategoryColor(this)"></div>
+      </div>
+      <button class="btn btn--expense" onclick="saveExpenseCategory()" id="btnSaveExpenseCategory" style="margin-top:14px;">Lưu danh mục</button>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Monthly recurring expenses -->
+  <div class="modal" id="moRecurringExpenses" onclick="if(event.target===this)closeRecurringExpensesModal()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="recurringExpenseMT">Chi tiêu định kỳ</div>
+      <div id="recurringExpenseList"></div>
+      <input type="hidden" id="editRecurringExpenseId">
+      <div class="section-divider" id="recurringExpenseFormTit">Thêm khoản hàng tháng</div>
+      <div class="form-group">
+        <label id="lbl_recurring_amount">Số tiền</label>
+        <input type="number" id="inp_recurring_amount" min="0" step="1" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label id="lbl_recurring_category">Danh mục</label>
+        <select id="inp_recurring_category"></select>
+      </div>
+      <div class="form-group">
+        <label id="lbl_recurring_day">Ngày hàng tháng</label>
+        <input type="number" id="inp_recurring_day" min="1" max="31" value="1">
+      </div>
+      <div class="dt-group">
+        <div class="dt-row">
+          <span class="dt-label" id="lbl_recurring_start">Bắt đầu</span>
+          <div class="dt-pill" onclick="openDatePicker('inp_recurring_start','disp_recurring_start')"><span class="dt-display" id="disp_recurring_start"></span><input type="hidden" id="inp_recurring_start"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label id="lbl_recurring_note">Ghi chú</label>
+        <input type="text" id="inp_recurring_note" placeholder="VD: Tiền nhà, điện thoại...">
+      </div>
+      <button class="btn btn--expense" onclick="saveRecurringExpense()" id="btnSaveRecurringExpense" style="margin-top:14px;">Lưu định kỳ</button>
+      <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Japan Take-home Plus -->
+  <div class="modal" id="moJpPayroll" onclick="if(event.target===this)closeJpPayrollModal()">
+    <div class="modal-sheet jp-payroll-sheet">
+      <div class="modal-handle"></div>
+      <div class="jp-payroll-head">
+        <div>
+          <div class="modal-title" id="jpModalTitle">Japan Take-home Plus</div>
+          <div class="jp-payroll-sub" id="jpModalSub">Ước tính Nenkin / Shakai hoken / thuế Nhật</div>
+        </div>
+        <div class="jp-status" id="jpStatusText">Preview</div>
+      </div>
+
+      <div class="jp-paywall" id="jpPaywallBlock">
+        <div>
+          <strong id="jpPaywallTitle">Mở khoá Japan Take-home Plus</strong>
+          <p id="jpPaywallBody">Mở khoá toàn bộ tính toán take-home, Nenkin, Shakai hoken và thuế chi tiết.</p>
+        </div>
+        <div class="jp-paywall-actions">
+          <button class="btn btn--small" onclick="buyJpPayrollMonthly()" id="jpMonthlyBtn">$0.99 / tháng</button>
+          <button class="btn btn--small btn--accent" onclick="buyJpPayrollLifetime()" id="jpLifetimeBtn">$9.99 vĩnh viễn</button>
+          <button class="btn btn--small empty-setup-secondary" onclick="restoreJpPayrollPurchase()" id="jpRestoreBtn">Khôi phục</button>
+        </div>
+      </div>
+
+      <div class="section-divider" id="jpSetupTitle">Thiết lập</div>
+      <div class="jp-form-grid">
+        <label><span id="jpLblWorkStyle">Work style</span>
+          <select id="jp_workStyle">
+            <option value="baito" id="jpOptWorkBaito">Baito / Arubaito</option>
+            <option value="haken" id="jpOptWorkHaken">Haken</option>
+            <option value="employee" id="jpOptWorkEmployee">Employee</option>
+            <option value="freelancer" id="jpOptWorkFreelancer">Freelancer</option>
+          </select>
+        </label>
+        <label><span id="jpLblMonthlyGross">Monthly gross</span>
+          <input id="jp_monthlyGross" type="number" min="0" step="1000">
+        </label>
+        <label><span id="jpLblPreviousAnnualGross">Previous annual gross</span>
+          <input id="jp_previousAnnualGross" type="number" min="0" step="10000">
+        </label>
+        <label><span id="jpLblAge">Age</span>
+          <input id="jp_age" type="number" min="15" max="90">
+        </label>
+        <label><span id="jpLblInsurance">Insurance</span>
+          <select id="jp_insuranceMode">
+            <option value="shakai" id="jpOptInsuranceShakai">Shakai hoken</option>
+            <option value="kokumin" id="jpOptInsuranceKokumin">Kokumin</option>
+            <option value="manual" id="jpOptInsuranceManual">Manual</option>
+          </select>
+        </label>
+        <label><span id="jpLblEmployment">Employment insurance</span>
+          <select id="jp_employmentCategory">
+            <option value="general" id="jpOptEmploymentGeneral">General 0.5%</option>
+            <option value="agricultureSakeConstruction" id="jpOptEmploymentSpecial">Agriculture/sake/construction 0.6%</option>
+            <option value="none" id="jpOptEmploymentNone">None</option>
+          </select>
+        </label>
+        <label><span id="jpLblWithholding">Withholding tax</span>
+          <select id="jp_withholdingType">
+            <option value="ko" id="jpOptWithholdingKo">甲欄 estimate</option>
+            <option value="otsu" id="jpOptWithholdingOtsu">乙欄 rough</option>
+            <option value="none" id="jpOptWithholdingNone">None</option>
+          </select>
+        </label>
+        <label><span id="jpLblResidentTax">Resident tax</span>
+          <select id="jp_residentTaxMode">
+            <option value="off" id="jpOptResidentOff">Off</option>
+            <option value="manual" id="jpOptResidentManual">Manual notice</option>
+            <option value="auto" id="jpOptResidentAuto">Auto estimate</option>
+            <option value="hybrid" id="jpOptResidentHybrid">Hybrid</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="jp-subform" id="jp_shakaiFields">
+        <div class="jp-form-grid">
+          <label><span id="jpLblPrefecture">Kyokai Kenpo branch</span>
+            <select id="jp_prefecture"></select>
+          </label>
+          <label><span id="jpLblStandardMode">Standard remuneration</span>
+            <select id="jp_standardMode">
+              <option value="auto" id="jpOptStandardAuto">Auto estimate</option>
+              <option value="manual" id="jpOptStandardManual">Manual from payslip</option>
+            </select>
+          </label>
+          <label><span id="jpLblManualStandard">Manual standard monthly</span>
+            <input id="jp_manualStandardMonthly" type="number" min="0" step="1000">
+          </label>
+          <label><span id="jpLblCustomHealthRate">Custom health rate %</span>
+            <input id="jp_customHealthRate" type="number" min="0" step="0.01">
+          </label>
+          <label class="jp-check">
+            <input id="jp_customHealthRateEnabled" type="checkbox">
+            <span id="jpLblCustomHealthEnabled">Use custom health insurance rate</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="jp-subform" id="jp_kokuminFields" style="display:none;">
+        <div class="jp-form-grid">
+          <label class="jp-check">
+            <input id="jp_includeNationalPension" type="checkbox">
+            <span id="jpLblIncludeNationalPension">Include national pension</span>
+          </label>
+          <label><span id="jpLblNhiMonthly">National Health Insurance monthly</span>
+            <input id="jp_nationalHealthInsuranceMonthly" type="number" min="0" step="1000">
+          </label>
+        </div>
+      </div>
+
+      <div class="jp-subform" id="jp_manualFields" style="display:none;">
+        <label><span id="jpLblManualSocial">Manual social insurance monthly</span>
+          <input id="jp_manualSocialInsuranceMonthly" type="number" min="0" step="1000">
+        </label>
+      </div>
+
+      <div class="jp-subform">
+        <div class="jp-form-grid">
+          <label><span id="jpLblDomesticDependents">Domestic dependents</span>
+            <input id="jp_domesticDependents" type="number" min="0" step="1">
+          </label>
+          <label><span id="jpLblOverseasDependents">Overseas dependents</span>
+            <input id="jp_overseasDependents" type="number" min="0" step="1">
+          </label>
+          <label id="jp_residentManualWrap"><span id="jpLblResidentManualMonthly">Resident tax notice monthly</span>
+            <input id="jp_residentTaxManualMonthly" type="number" min="0" step="1000">
+          </label>
+          <label class="jp-check">
+            <input id="jp_overseasQualified" type="checkbox">
+            <span id="jpLblOverseasQualified">Overseas dependent documents/remittance ready</span>
+          </label>
+        </div>
+      </div>
+
+      <label class="jp-disclaimer">
+        <input id="jp_disclaimerAccepted" type="checkbox">
+        <span id="jpDisclaimerText">Kết quả là ước tính, không thay thế phiếu lương chính thức.</span>
+      </label>
+
+      <div class="jp-action-row">
+        <button class="btn btn--small empty-setup-secondary" onclick="fillJpPayrollGrossFromMonth()" id="jpUseMonthBtn">Dùng thu nhập tháng này</button>
+        <button class="btn btn--small" onclick="saveJpPayrollFromModal()" id="jpSaveBtn">Lưu thiết lập</button>
+      </div>
+
+      <div class="section-divider" id="jpResultTitle">Kết quả estimate</div>
+      <div class="jp-result-summary" id="jp_resultSummary"></div>
+      <div class="jp-result-details" id="jp_resultDetails"></div>
+      <div class="jp-info-block"><strong id="jpExplainLabel">Explanation</strong><div id="jp_resultExplain"></div></div>
+      <div class="jp-info-block jp-warning-block"><strong id="jpWarningLabel">Warnings</strong><div id="jp_resultWarnings"></div></div>
       <div style="height:12px;"></div>
     </div>
   </div>
@@ -534,9 +832,13 @@
   <script src="js/i18n.js"></script>
   <script src="js/state.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/jp-payroll-rules.js"></script>
+  <script src="js/jp-payroll-engine.js"></script>
+  <script src="js/iap.js"></script>
   <script src="js/calc.js"></script>
   <script src="js/pages.js"></script>
   <script src="js/modals.js"></script>
+  <script src="js/jp-payroll-ui.js"></script>
   <script src="js/guide.js"></script>
   <script src="js/onboarding.js"></script>
   <script src="js/app.js"></script>

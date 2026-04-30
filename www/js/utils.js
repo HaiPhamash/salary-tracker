@@ -87,6 +87,10 @@ async function promptDialog(message, title, defaultValue) {
   return v;
 }
 
+function txt(key, fallback) {
+  return (L[curLang] && L[curLang][key]) || (L.en && L.en[key]) || fallback || key;
+}
+
 function getJob(id) {
   return jobs.find(j => j.id === id) || null;
 }
@@ -125,6 +129,175 @@ function getShiftJobMeta(shift) {
     icon: shift.jobIcon || '🗂️',
     color: shift.jobColor || '#64748b'
   };
+}
+
+function getExpenseCategory(id) {
+  return expenseCategories.find(c => c.id === id) || null;
+}
+
+function getFirstExpenseCategory() {
+  return expenseCategories[0] || null;
+}
+
+function getOtherExpenseCategory() {
+  return expenseCategories.find(c => c.key === 'other') || getFirstExpenseCategory();
+}
+
+function captureExpenseCategoryMeta(expense, category) {
+  if (!expense || !category) return;
+  expense.categoryId = category.id;
+  expense.categoryName = getExpenseCategoryDisplayName(category) || category.name;
+  expense.categoryIcon = category.icon;
+  expense.categoryColor = category.color;
+}
+
+function getExpenseCategoryMeta(expense) {
+  const category = getExpenseCategory(expense.categoryId);
+  if (category) {
+    return {
+      id: category.id,
+      name: getExpenseCategoryDisplayName(category) || category.name,
+      icon: category.icon,
+      color: category.color
+    };
+  }
+  return {
+    id: expense.categoryId || null,
+    name: expense.categoryName || txt('expenseArchivedCategory', 'Archived category'),
+    icon: expense.categoryIcon || '📌',
+    color: expense.categoryColor || '#64748b'
+  };
+}
+
+function getExpenseAmount(expense) {
+  return Math.max(0, Number(expense && expense.amount) || 0);
+}
+
+function getExpensesForRange(fromYmd, toYmd, categoryIdFilter) {
+  if (!fromYmd || !toYmd || fromYmd > toYmd) return [];
+  return expenses.filter(item =>
+    item.date >= fromYmd &&
+    item.date <= toYmd &&
+    (!categoryIdFilter || item.categoryId === categoryIdFilter)
+  );
+}
+
+function getExpenseTotalForRange(fromYmd, toYmd, categoryIdFilter) {
+  return getExpensesForRange(fromYmd, toYmd, categoryIdFilter)
+    .reduce((sum, item) => sum + getExpenseAmount(item), 0);
+}
+
+function getExpenseBreakdownForRange(fromYmd, toYmd) {
+  const groups = {};
+  getExpensesForRange(fromYmd, toYmd, null).forEach(item => {
+    const cat = getExpenseCategoryMeta(item);
+    const key = String(cat.id || cat.name || 'other');
+    if (!groups[key]) {
+      groups[key] = {
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryIcon: cat.icon,
+        categoryColor: cat.color,
+        total: 0,
+        count: 0
+      };
+    }
+    groups[key].total += getExpenseAmount(item);
+    groups[key].count += 1;
+  });
+  return Object.values(groups).sort((a, b) => b.total - a.total);
+}
+
+function getIncomeForRange(fromYmd, toYmd, jobIdFilter) {
+  if (!fromYmd || !toYmd || fromYmd > toYmd) {
+    return { gross: 0, allowances: 0, deductions: 0, net: 0, shifts: 0, hours: 0, otHours: 0 };
+  }
+  const src = (jobIdFilter ? shifts.filter(s => s.jobId === jobIdFilter) : shifts)
+    .filter(s => s.date >= fromYmd && s.date <= toYmd);
+  const gross = src.reduce((sum, shift) => sum + getShiftPay(shift), 0);
+  const allowances = getMonthlyAllowanceForRange(fromYmd, toYmd, jobIdFilter || null);
+  const deductions = getDeductionsForRange(fromYmd, toYmd, jobIdFilter || null);
+  return {
+    gross,
+    allowances,
+    deductions,
+    net: gross + allowances - deductions,
+    shifts: src.length,
+    hours: src.reduce((sum, shift) => sum + (shift.hours || 0), 0),
+    otHours: src.reduce((sum, shift) => sum + (shift.otH || 0), 0)
+  };
+}
+
+function getCashflowForRange(fromYmd, toYmd, jobIdFilter) {
+  const income = getIncomeForRange(fromYmd, toYmd, jobIdFilter || null);
+  const expenseTotal = getExpenseTotalForRange(fromYmd, toYmd, null);
+  return {
+    ...income,
+    expenses: expenseTotal,
+    remaining: income.net - expenseTotal
+  };
+}
+
+function getRecurringExpenseKey(recurringId, dueDate) {
+  return 'monthly:' + recurringId + ':' + dueDate;
+}
+
+function generateDueMonthlyExpenses(toYmd) {
+  if (!activeProfileId) return 0;
+  if (typeof ensureFinanceData === 'function') ensureFinanceData();
+  const limit = toYmd || localYmd();
+  let created = 0;
+
+  recurringExpenses.forEach(rec => {
+    if (!rec || rec.active === false || !rec.amount) return;
+    const start = rec.startDate || limit;
+    if (start > limit) return;
+    const end = rec.endDate || '';
+    const [startYear, startMonth] = start.slice(0, 7).split('-').map(Number);
+    const [limitYear, limitMonth] = limit.slice(0, 7).split('-').map(Number);
+    let year = startYear;
+    let month = startMonth;
+
+    while (year < limitYear || (year === limitYear && month <= limitMonth)) {
+      const dim = daysInMonth(year, month);
+      const day = Math.min(dim, Math.max(1, parseInt(rec.dayOfMonth, 10) || 1));
+      const dueDate = year + '-' + pad2(month) + '-' + pad2(day);
+      const key = getRecurringExpenseKey(rec.id, dueDate);
+      if (rec.lastGeneratedYmd && dueDate <= rec.lastGeneratedYmd) {
+        month++;
+        if (month > 12) { month = 1; year++; }
+        continue;
+      }
+      const alreadyCreated = expenses.some(item =>
+        item.recurringKey === key ||
+        (item.source === 'recurring' && item.recurringId === rec.id && item.date === dueDate)
+      );
+
+      if (!alreadyCreated && dueDate >= start && dueDate <= limit && (!end || dueDate <= end)) {
+        const category = getExpenseCategory(rec.categoryId) || getOtherExpenseCategory();
+        const expense = {
+          id: nextExpenseId++,
+          date: dueDate,
+          amount: Math.round(Number(rec.amount) || 0),
+          note: rec.note || '',
+          source: 'recurring',
+          recurringId: rec.id,
+          recurringKey: key,
+          createdAt: Date.now()
+        };
+        captureExpenseCategoryMeta(expense, category);
+        expenses.push(expense);
+        rec.lastGeneratedYmd = dueDate;
+        created++;
+      }
+
+      month++;
+      if (month > 12) { month = 1; year++; }
+    }
+  });
+
+  if (created > 0) save();
+  return created;
 }
 
 function pad2(v) {
